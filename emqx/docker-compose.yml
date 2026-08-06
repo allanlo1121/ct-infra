@@ -1,0 +1,35 @@
+
+services:
+  emqx:
+    image: emqx/emqx:5.8.9
+
+    container_name: emqx
+
+    restart: unless-stopped
+
+    ports:
+      - "1883:1883"
+      - "8083:8083"
+      - "8084:8084"
+      - "8883:8883"
+      - "18083:18083"
+
+    environment:
+      EMQX_DASHBOARD__DEFAULT_USERNAME: admin
+      EMQX_DASHBOARD__DEFAULT_PASSWORD: public
+
+    volumes:
+      - ./data:/opt/emqx/data
+      - ./log:/opt/emqx/log
+    
+    networks:
+      - emqx
+      - supabase
+
+networks:
+  emqx:
+    name: emqx_network
+
+  supabase:
+    external: true
+    name: supabase_network_chengtong-vision
