@@ -118,7 +118,7 @@ from proj.v_tunnel_list vtl;
 
 
 
-create or replace view app.v_tunnel_risk_overview
+create or replace view proj.v_tunnel_risk_overview
 with (security_invoker = true)
 as
 

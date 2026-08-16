@@ -144,3 +144,11 @@ create table public.import_records (
   message text
 
 );
+
+
+create schema if not exists app;
+
+
+-- schema
+grant usage on schema app to anon;
+grant usage on schema app to authenticated;
