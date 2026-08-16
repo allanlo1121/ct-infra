@@ -33,9 +33,11 @@ on sequences to authenticated, service_role;
 -- 0302 TBM TABLES
 -- =====================================================
 
-create table tbm.tbms (
-  id uuid primary key default gen_random_uuid(),
-  code text not null unique,
+create table tbm.tbms ( 
+  code text primary key
+  check (
+    code ~ '^[a-z]+[0-9]+$'
+  ),
   name text not null,
   manage_code text,
   model text not null,
@@ -53,6 +55,10 @@ create table tbm.tbms (
   );
 
 
+-- 开启实时订阅
+alter publication supabase_realtime add table tbm.tbms;
+
+
 create table tbm.tbm_operation_modes (
 
     tbm_type_id uuid not null
@@ -67,3 +73,47 @@ create table tbm.tbm_operation_modes (
         operation_mode_id
     )
 );
+
+
+
+create table tbm.tbm_assignments (
+
+    id uuid primary key default gen_random_uuid(),
+
+    tbm_code text not null
+        references tbm.tbms(code),
+
+    tunnel_id uuid not null
+        references proj.tunnels(id),
+
+    start_date date not null,
+    end_date date,
+
+    remark text,
+
+    constraint chk_date_range
+      check (end_date is null or end_date >= start_date)
+);
+
+-- 当前唯一
+create unique index uq_tbm_assignments_current
+on tbm.tbm_assignments(tbm_code)
+where end_date is null;
+
+-- tbm 与 tunnel 唯一
+create unique index uq_tbm_assignments_tunnel
+on tbm.tbm_assignments(tbm_code,tunnel_id);
+
+-- 防止时间重叠
+alter table tbm.tbm_assignments
+add constraint uq_tbm_assignments_no_overlap
+exclude using gist (
+  tbm_code with =,
+  daterange(start_date, coalesce(end_date, 'infinity')) with &&
+);
+
+
+-- 开启实时订阅
+alter publication supabase_realtime add table tbm.tbm_assignments;
+-- DELETE 保留old 数据
+alter table tbm.tbm_assignmentsreplica identity full;

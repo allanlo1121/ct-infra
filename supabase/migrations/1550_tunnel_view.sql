@@ -17,6 +17,7 @@ select
 
   t.start_chainage,
   t.end_chainage,
+  t.advance_direction,
   t.start_ring,
   t.end_ring,
 
@@ -78,6 +79,7 @@ select
   tl.prefix,
   tl.start_chainage,
   tl.end_chainage,
+  tl.advance_direction,
   tl.start_ring,
   tl.end_ring,
 
@@ -108,75 +110,63 @@ create or replace view proj.v_tunnel_picker as
 select
   vtl.id,
   vtl.name,
-  vtl.project_name,  
-  vtl.organization_name,
+  vtl.full_name,
+  vtl.project_name,
   vtl.tunnel_status_name
 
 from proj.v_tunnel_list vtl;
 
 
 
+create or replace view app.v_tunnel_risk_overview
+with (security_invoker = true)
+as
 
-create or replace view proj.v_tunnel_workspace_detail as
 select
-  t.id,
 
-  t.project_id,
-  p.name as project_name,
-  p.organization_id,
-  o.name as organization_name,
+    r.id as risk_id,
 
-  t.name,
-  t.full_name,
-  t.start_chainage,
-  t.end_chainage,
-  t.start_ring,
-  t.end_ring,
+    r.tunnel_id,
+    t.name as tunnel_name,
 
-  tbm.id as tbm_id,
-  tbm.code as tbm_code,
-  tbm.name as tbm_name,
+    prj.id as project_id,
+    prj.name as project_name,
 
-  t.actual_start_date,
-  t.actual_end_date,
-
-  tsv.schedule_start_date,
-  tsv.schedule_end_date, 
-  tsv.version_no,
-  t.sort_order,
+    md.name as region_name,
 
 
-  ps.tunnel_status_id,
-  s.name as tunnel_status_name
+    r.name as risk_name,
+    r.risk_level,
 
-from proj.tunnels t
+    r.start_chainage,
+    r.end_chainage,
 
-left join proj.projects p
-  on p.id = t.project_id
+    r.burial_depth,
 
-left join hr.organizations o
-  on o.id = p.organization_id
- and o.deleted_at is null
+    geo.layer as geo_class_layer,
+    geo.name as geo_class_name,
 
-left join proj.tunnel_status_timeline ps
-  on ps.tunnel_id = t.id
- and ps.valid_to is null
+    rock.name as geo_rock_class_name,
 
-left join public.master_data s
-  on s.id = ps.tunnel_status_id
+    r.description,
 
-left join tbm.tbm_assignments ta
-  on ta.tunnel_id = t.id
- and ta.end_date is null
+    r.created_at,
+    r.updated_at
 
-left join tbm.tbms tbm
-  on tbm.id = ta.tbm_id
 
--- 取最新的计划进度版本
-left join (
-  select distinct on (tunnel_id)
-    *
-  from proj.tunnel_schedule_versions
-  order by tunnel_id, version_no desc
-) tsv
-  on tsv.tunnel_id = t.id;
+from proj.tunnel_risks r
+
+left join proj.tunnels t
+    on t.id = r.tunnel_id
+
+left join proj.projects prj
+    on prj.id = t.project_id
+
+left join public.master_data md
+    on md.id = prj.region_id
+
+left join proj.geo_classes geo
+  on geo.id = r.geo_class_id
+
+left join proj.geo_rock_classes rock
+  on rock.id = r.geo_rock_class_id;

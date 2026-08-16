@@ -1,7 +1,7 @@
 
 create type proj.advance_direction as enum (
-  'chainageIncrease',
-  'chainageDecrease'
+  'chainage_increase',
+  'chainage_decrease'
 );
 create table proj.tunnels (
   id uuid primary key default gen_random_uuid(),
@@ -24,7 +24,7 @@ create table proj.tunnels (
   -- 里程信息
   start_chainage numeric(12,3), -- 起始里程
   end_chainage numeric(12,3),   -- 结束里程
-  advance_direction proj.advance_direction not null default 'chainageIncrease', -- 进尺方向
+  advance_direction proj.advance_direction not null default 'chainage_increase', -- 进尺方向
   start_ring integer not null default 0,
   end_ring integer ,
 
@@ -60,6 +60,9 @@ on proj.tunnels(project_id);
 -- 名称模糊搜索（如果你前端有搜索）
 create index idx_tunnels_name
 on proj.tunnels using gin (to_tsvector('simple', name));
+
+--  开启实时订阅
+alter publication supabase_realtime add table proj.tunnels;
 
 
 
@@ -106,7 +109,46 @@ create table proj.tunnel_schedule_versions (
   unique (tunnel_id, version_no)
 );
 
+create table proj.tunnel_plans (
+    id bigserial primary key,
 
+    tunnel_id uuid not null
+        references proj.tunnels(id),
+
+    plan_name text not null,
+
+    version integer not null default 1,
+
+    status text not null default 'draft',
+
+    remark text,
+
+    created_at timestamptz not null default now(),
+    updated_at timestamptz not null default now(),
+
+    unique (
+        tunnel_id,
+        version
+    )
+);
+
+
+create table proj.tunnel_plan_days (
+    id bigserial primary key,
+
+    plan_id bigint not null
+        references proj.tunnel_plans(id),
+
+    work_date date not null,
+
+    plan_ring_count integer,
+    plan_advance_meter numeric,
+
+    unique (
+        plan_id,
+        work_date
+    )
+);
 
 
 

@@ -1,9 +1,9 @@
 
 
 
-INSERT INTO tbm.tbm_runtime_parameters (code, name,subsystem_id,data_type, is_alarm, is_reportable, sort_order)
+INSERT INTO tbm.runtime_parameters (code, name,subsystem_id,data_type, is_alarm, is_reportable, sort_order)
 SELECT v.code, v.name,ss.id,v.data_type, v.is_alarm, v.is_reportable, v.sort_order 
-FROM tbm.tbm_subsystems ss
+FROM tbm.subsystems ss
 CROSS JOIN (
     VALUES 
 ('b000000001', '推进模式启动','boolean', false, false, 100001), 
@@ -13,9 +13,9 @@ WHERE ss.code = 'b00'
 ON CONFLICT (code) DO NOTHING;
 
 
-INSERT INTO tbm.tbm_runtime_parameters (code, name,subsystem_id,data_type, is_alarm, is_reportable, sort_order)
+INSERT INTO tbm.runtime_parameters (code, name,subsystem_id,data_type, is_alarm, is_reportable, sort_order)
 SELECT v.code, v.name,ss.id,v.data_type, v.is_alarm, v.is_reportable, v.sort_order 
-FROM tbm.tbm_subsystems ss
+FROM tbm.subsystems ss
 CROSS JOIN (
     VALUES 
 ('b010000001', '02含量超过极限值','boolean', true,false, 101001),
@@ -769,4 +769,30 @@ CROSS JOIN (
 ('b010102008', '4# 驱动隔板喷水压力断线', 'boolean', true,false, 106008)
 ) AS v(code, name, data_type, is_alarm,is_reportable, sort_order)
 WHERE ss.code = 'b01'
+ON CONFLICT (code) DO NOTHING;
+
+
+
+INSERT INTO tbm.runtime_parameters (code, name,subsystem_id,data_type, is_alarm, is_reportable, sort_order)
+SELECT v.code, v.name,ss.id,v.data_type, v.is_alarm, v.is_reportable, v.sort_order 
+FROM tbm.subsystems ss
+CROSS JOIN (
+    VALUES
+('n010102001', '盾构机采集数据掉线', 'boolean', true, false,502001),
+('n010102002', '盾构机采集程序掉线', 'boolean', true, false,502002),
+('n010102003', '未知设备掉线', 'boolean', true, false, 502003)
+) AS v(code, name, data_type, is_alarm,is_reportable, sort_order)
+WHERE ss.code = 'n01'
+ON CONFLICT (code) DO NOTHING;
+
+INSERT INTO tbm.runtime_parameters (code, name,subsystem_id,data_type, is_alarm, is_reportable, sort_order)
+SELECT v.code, v.name,ss.id,v.data_type, v.is_alarm, v.is_reportable, v.sort_order 
+FROM tbm.subsystems ss
+CROSS JOIN (
+    VALUES
+( 'e010102001', '环号异常', 'boolean', true, false, 302001), 
+( 'e010102002', '环号跳跃', 'boolean', true, false, 302002), 
+( 'e010102003', '环号回滚', 'boolean', true, false, 302003)
+) AS v(code, name, data_type, is_alarm,is_reportable, sort_order)
+WHERE ss.code = 'e01'
 ON CONFLICT (code) DO NOTHING;

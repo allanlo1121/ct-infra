@@ -2,7 +2,7 @@
 -- MQTT USERS
 -- =========================================================
 
-create table eqp.mqtt_user (
+create table tbm.mqtt_user (
 
     id uuid primary key default gen_random_uuid(),
 
@@ -16,8 +16,8 @@ create table eqp.mqtt_user (
         )
     ),
 
-    tbm_id uuid
-        references tbm.tbms(id),
+    tbm_code text
+        references tbm.tbms(code),
 
     username text not null unique,
 
@@ -37,29 +37,29 @@ create table eqp.mqtt_user (
     check (
         (
             user_type = 'tbm'
-            and tbm_id is not null
+            and tbm_code is not null
         )
         or
         (
             user_type <> 'tbm'
-            and tbm_id is null
+            and tbm_code is null
         )
     )
 );
 
-comment on table eqp.mqtt_user
+comment on table tbm.mqtt_user
 is 'MQTT用户';
 
 -- =========================================================
 -- MQTT ACL
 -- =========================================================
 
-create table eqp.mqtt_acl (
+create table tbm.mqtt_acl (
 
     id uuid primary key default gen_random_uuid(),
 
     username text not null
-        references eqp.mqtt_user(username)
+        references tbm.mqtt_user(username)
         on delete cascade,
 
     permission text not null
@@ -82,15 +82,15 @@ create table eqp.mqtt_acl (
     topic text not null
 );
 
-comment on table eqp.mqtt_acl
+comment on table tbm.mqtt_acl
 is 'MQTT ACL';
 
 
 
-create table eqp.mqtt_user_status (
+create table tbm.mqtt_user_status (
 
     mqtt_user_id uuid primary key
-        references eqp.mqtt_user(id),
+        references tbm.mqtt_user(id),
 
     -- 当前连接client
     client_id text,
@@ -119,11 +119,11 @@ create table eqp.mqtt_user_status (
     updated_at timestamptz not null default now()
 );
 
-create table eqp.mqtt_connection_sessions (
+create table tbm.mqtt_connection_sessions (
   id uuid primary key default gen_random_uuid(),
 
   mqtt_user_id uuid not null
-    references eqp.mqtt_user(id),
+    references tbm.mqtt_user(id),
 
   client_id text,
   connected_at timestamptz not null default now(),
@@ -134,7 +134,7 @@ create table eqp.mqtt_connection_sessions (
   session_id text
 );
 
-create or replace function eqp.sync_mqtt_connection_sessions()
+create or replace function tbm.sync_mqtt_connection_sessions()
 returns trigger
 language plpgsql
 as $$
@@ -146,7 +146,7 @@ begin
     and new.is_online = true
   then
 
-    insert into eqp.mqtt_connection_sessions (
+    insert into tbm.mqtt_connection_sessions (
       mqtt_user_id,
       client_id,
       connected_at,
@@ -169,7 +169,7 @@ begin
     and new.is_online = false
   then
 
-    update eqp.mqtt_connection_sessions
+    update tbm.mqtt_connection_sessions
     set
       disconnected_at = coalesce(new.disconnected_at, now()),
       disconnect_reason = new.disconnect_reason
@@ -183,10 +183,10 @@ begin
 end;
 $$;
 
-create or replace view eqp.v_mqtt_users as
+create or replace view tbm.v_mqtt_users as
 select
     mu.id,
-    mu.tbm_id,
+    mu.tbm_code,
     mu.username,
     mu.user_type,
     mu.topic_prefix,
@@ -221,9 +221,9 @@ select
         '[]'::jsonb
     ) as acl
 
-from eqp.mqtt_user mu
+from tbm.mqtt_user mu
 
-left join eqp.mqtt_user_status mus
+left join tbm.mqtt_user_status mus
     on mus.mqtt_user_id = mu.id
 
 left join lateral (
@@ -231,18 +231,18 @@ left join lateral (
         s.connected_at,
         s.disconnected_at,
         s.disconnect_reason
-    from eqp.mqtt_connection_sessions s
+    from tbm.mqtt_connection_sessions s
     where s.mqtt_user_id = mu.id
     order by s.connected_at desc
     limit 1
 ) last_session on true
 
-left join eqp.mqtt_acl ma
+left join tbm.mqtt_acl ma
     on ma.username = mu.username
 
 group by
     mu.id,
-    mu.tbm_id,
+    mu.tbm_code,
     mu.username,
     mu.user_type,
     mu.topic_prefix,
@@ -265,53 +265,69 @@ group by
     last_session.disconnect_reason;
 
 
+-- mqtt 数据库用户
+
+do $$
+begin
+  if not exists (
+    select 1
+    from pg_roles
+    where rolname = 'emqx_user'
+  ) then
+    create role emqx_user
+      with login
+      password 'CHANGE_ME_STRONG_PASSWORD';
+  end if;
+end
+$$;
+
+grant usage on schema eqp to emqx_user;
+
+grant select on table eqp.mqtt_user to emqx_user;
+grant select on table eqp.mqtt_acl to emqx_user;
+
+alter default privileges in schema eqp
+grant select on tables to emqx_user;
 
 
-create table tbm.tbm_connection_status (
-  tbm_id uuid not null references tbm.tbms(id),
 
-  type text not null check (
-    type in ('heartbeat', 'realdata')
-  ),
+-- =========================================================
+-- TBM WRITER
+-- =========================================================
 
-  last_seen_at timestamptz not null,
+do $$
+begin
 
-  is_online boolean not null default false,
+  if not exists (
+    select 1
+    from pg_roles
+    where rolname = 'tbm_writer'
+  ) then
 
-  updated_at timestamptz not null default now(),
+    create role tbm_writer
+      with login
+      password 'CHANGE_ME_STRONG_PASSWORD';
 
-  primary key (tbm_id, type)
-);
+  end if;
+
+end
+$$;
+
+grant usage
+on schema eqp
+to tbm_writer;
+
+grant insert
+on all tables in schema eqp
+to tbm_writer;
+
+alter default privileges in schema eqp
+grant insert on tables to tbm_writer;
 
 
 
-create table tbm.tbm_connection_status_history (
-  id uuid primary key default gen_random_uuid(),
 
-  tbm_id uuid not null references tbm.tbms(id),
 
-  type text not null check (
-    type in ('heartbeat', 'realdata')
-  ),
-
-  status text not null check (
-    status in ('online', 'offline')
-  ),
-
-  start_at timestamptz not null,
-  end_at timestamptz,
-
-  source text not null default 'auto',
-  remark text,
-
-  created_at timestamptz not null default now(),
-
-  constraint tbm_connection_status_history_time_check
-    check (
-      end_at is null
-      or end_at > start_at
-    )
-);
 
 
 

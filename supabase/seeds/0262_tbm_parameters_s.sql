@@ -1,8 +1,8 @@
 
 
-INSERT INTO tbm.tbm_runtime_parameters (code,name,subsystem_id,data_type,unit,digits,is_alarm,sort_order)
+INSERT INTO tbm.runtime_parameters (code,name,subsystem_id,data_type,unit,digits,is_alarm,sort_order)
 SELECT v.code,v.name,ss.id,v.data_type,v.unit,v.digits,v.is_alarm,v.sort_order 
-FROM tbm.tbm_subsystems ss
+FROM tbm.subsystems ss
 CROSS JOIN (
   VALUES 
 ('s010101010','刀盘刹车压力1','double','bar',2,false,200010),
@@ -18,9 +18,9 @@ WHERE ss.code = 's01'
 ON CONFLICT (code) DO NOTHING;
 
 
-INSERT INTO tbm.tbm_runtime_parameters (code,name,subsystem_id,data_type,unit,digits,is_alarm,sort_order)
+INSERT INTO tbm.runtime_parameters (code,name,subsystem_id,data_type,unit,digits,is_alarm,sort_order)
 SELECT v.code,v.name,ss.id,v.data_type,v.unit,v.digits,v.is_alarm,v.sort_order 
-FROM tbm.tbm_subsystems ss
+FROM tbm.subsystems ss
 CROSS JOIN (
   VALUES 
 ('s020901000','土仓土压组','double','bar',2,false,208000),
@@ -51,9 +51,9 @@ ON CONFLICT (code) DO NOTHING;
 
 
 
-INSERT INTO tbm.tbm_runtime_parameters (code,name,subsystem_id,data_type,unit,digits,is_alarm,sort_order)
+INSERT INTO tbm.runtime_parameters (code,name,subsystem_id,data_type,unit,digits,is_alarm,sort_order)
 SELECT v.code,v.name,ss.id,v.data_type,v.unit,v.digits,v.is_alarm,v.sort_order 
-FROM tbm.tbm_subsystems ss
+FROM tbm.subsystems ss
 CROSS JOIN (
   VALUES 
 ('s030007001','主驱动线电压L1/L2','double','v',2,false,211001),
@@ -134,9 +134,9 @@ CROSS JOIN (
 WHERE ss.code = 's03'
 ON CONFLICT (code) DO NOTHING;
 
-INSERT INTO tbm.tbm_runtime_parameters (code,name,subsystem_id,data_type,unit,digits,is_alarm,sort_order)
+INSERT INTO tbm.runtime_parameters (code,name,subsystem_id,data_type,unit,digits,is_alarm,sort_order)
 SELECT v.code,v.name,ss.id,v.data_type,v.unit,v.digits,v.is_alarm,v.sort_order 
-FROM tbm.tbm_subsystems ss
+FROM tbm.subsystems ss
 CROSS JOIN (
   VALUES 
 ('s040211001','抓举头角度','double','°',2,false,262001)
@@ -145,9 +145,9 @@ WHERE ss.code = 's04'
 ON CONFLICT (code) DO NOTHING;
 
 
-INSERT INTO tbm.tbm_runtime_parameters (code,name,subsystem_id,data_type,unit,digits,is_alarm,sort_order)
+INSERT INTO tbm.runtime_parameters (code,name,subsystem_id,data_type,unit,digits,is_alarm,sort_order)
 SELECT v.code,v.name,ss.id,v.data_type,v.unit,v.digits,v.is_alarm,v.sort_order 
-FROM tbm.tbm_subsystems ss
+FROM tbm.subsystems ss
 CROSS JOIN (
   VALUES 
 ('s050001001','总推进力','double','kN',2,true,260001),
@@ -172,9 +172,9 @@ WHERE ss.code = 's05'
 ON CONFLICT (code) DO NOTHING;
 
 
-INSERT INTO tbm.tbm_runtime_parameters (code,name,subsystem_id,data_type,unit,digits,is_alarm,sort_order)
+INSERT INTO tbm.runtime_parameters (code,name,subsystem_id,data_type,unit,digits,is_alarm,sort_order)
 SELECT v.code,v.name,ss.id,v.data_type,v.unit,v.digits,v.is_alarm,v.sort_order 
-FROM tbm.tbm_subsystems ss
+FROM tbm.subsystems ss
 CROSS JOIN (
   VALUES 
 ('s070102001','螺机扭矩','double','kN·m',2,false,268001),
@@ -192,9 +192,9 @@ CROSS JOIN (
 WHERE ss.code = 's07'
 ON CONFLICT (code) DO NOTHING;
 
-INSERT INTO tbm.tbm_runtime_parameters (code,name,subsystem_id,data_type,unit,digits,is_alarm,sort_order)
+INSERT INTO tbm.runtime_parameters (code,name,subsystem_id,data_type,unit,digits,is_alarm,sort_order)
 SELECT v.code,v.name,ss.id,v.data_type,v.unit,v.digits,v.is_alarm,v.sort_order 
-FROM tbm.tbm_subsystems ss
+FROM tbm.subsystems ss
 CROSS JOIN (
   VALUES 
 ('s080201001','后配套拖拉油缸压力','double','bar',2,false,276001)
@@ -202,9 +202,9 @@ CROSS JOIN (
 WHERE ss.code = 's08'
 ON CONFLICT (code) DO NOTHING;
 
-INSERT INTO tbm.tbm_runtime_parameters (code,name,subsystem_id,data_type,unit,digits,is_alarm,sort_order)
+INSERT INTO tbm.runtime_parameters (code,name,subsystem_id,data_type,unit,digits,is_alarm,sort_order)
 SELECT v.code,v.name,ss.id,v.data_type,v.unit,v.digits,v.is_alarm,v.sort_order 
-FROM tbm.tbm_subsystems ss
+FROM tbm.subsystems ss
 CROSS JOIN (
   VALUES 
 ('s090109003','皮带机转速（rpm）','double','rpm',2,false,277003)
@@ -212,9 +212,9 @@ CROSS JOIN (
 WHERE ss.code = 's09'
 ON CONFLICT (code) DO NOTHING;
 
-INSERT INTO tbm.tbm_runtime_parameters (code,name,subsystem_id,data_type,unit,digits,is_alarm,sort_order)
+INSERT INTO tbm.runtime_parameters (code,name,subsystem_id,data_type,unit,digits,is_alarm,sort_order)
 SELECT v.code,v.name,ss.id,v.data_type,v.unit,v.digits,v.is_alarm,v.sort_order 
-FROM tbm.tbm_subsystems ss
+FROM tbm.subsystems ss
 CROSS JOIN (
   VALUES 
 ('s100100005','导向盾尾里程','double','m',2,false,278005),
@@ -242,9 +242,9 @@ CROSS JOIN (
 WHERE ss.code = 's10'
 ON CONFLICT (code) DO NOTHING;
 
-INSERT INTO tbm.tbm_runtime_parameters (code,name,subsystem_id,data_type,unit,digits,is_alarm,sort_order)
+INSERT INTO tbm.runtime_parameters (code,name,subsystem_id,data_type,unit,digits,is_alarm,sort_order)
 SELECT v.code,v.name,ss.id,v.data_type,v.unit,v.digits,v.is_alarm,v.sort_order 
-FROM tbm.tbm_subsystems ss
+FROM tbm.subsystems ss
 CROSS JOIN (
   VALUES 
 ('s200013001','A液当前环累计量','double','L',2,false,282001),
@@ -271,9 +271,9 @@ WHERE ss.code = 's20'
 ON CONFLICT (code) DO NOTHING;
 
 
-INSERT INTO tbm.tbm_runtime_parameters (code,name,subsystem_id,data_type,unit,digits,is_alarm,sort_order)
+INSERT INTO tbm.runtime_parameters (code,name,subsystem_id,data_type,unit,digits,is_alarm,sort_order)
 SELECT v.code,v.name,ss.id,v.data_type,v.unit,v.digits,v.is_alarm,v.sort_order 
-FROM tbm.tbm_subsystems ss
+FROM tbm.subsystems ss
 CROSS JOIN (
   VALUES 
 ('s210013001','泡沫系统当前环用水量','double','L',2,false,290001),
@@ -318,9 +318,9 @@ CROSS JOIN (
 WHERE ss.code = 's21'
 ON CONFLICT (code) DO NOTHING;
 
-INSERT INTO tbm.tbm_runtime_parameters (code,name,subsystem_id,data_type,unit,digits,is_alarm,sort_order)
+INSERT INTO tbm.runtime_parameters (code,name,subsystem_id,data_type,unit,digits,is_alarm,sort_order)
 SELECT v.code,v.name,ss.id,v.data_type,v.unit,v.digits,v.is_alarm,v.sort_order 
-FROM tbm.tbm_subsystems ss
+FROM tbm.subsystems ss
 CROSS JOIN (
   VALUES 
 ('s220810001','螺机CH4','double','%',2,false,315001),
@@ -330,9 +330,9 @@ WHERE ss.code = 's22'
 ON CONFLICT (code) DO NOTHING;
 
 
-INSERT INTO tbm.tbm_runtime_parameters (code,name,subsystem_id,data_type,unit,digits,is_alarm,sort_order)
+INSERT INTO tbm.runtime_parameters (code,name,subsystem_id,data_type,unit,digits,is_alarm,sort_order)
 SELECT v.code,v.name,ss.id,v.data_type,v.unit,v.digits,v.is_alarm,v.sort_order 
-FROM tbm.tbm_subsystems ss
+FROM tbm.subsystems ss
 CROSS JOIN (
   VALUES 
 ('s240101001','膨润土罐压力','double','bar',2,false,316001),
@@ -347,9 +347,9 @@ WHERE ss.code = 's24'
 ON CONFLICT (code) DO NOTHING;
 
 
-INSERT INTO tbm.tbm_runtime_parameters (code,name,subsystem_id,data_type,unit,digits,is_alarm,sort_order)
+INSERT INTO tbm.runtime_parameters (code,name,subsystem_id,data_type,unit,digits,is_alarm,sort_order)
 SELECT v.code,v.name,ss.id,v.data_type,v.unit,v.digits,v.is_alarm,v.sort_order 
-FROM tbm.tbm_subsystems ss
+FROM tbm.subsystems ss
 CROSS JOIN (
   VALUES 
 ('s260001001','盾尾油脂泵压力','double','bar',2,false,320001),
@@ -405,9 +405,9 @@ WHERE ss.code = 's26'
 ON CONFLICT (code) DO NOTHING;
 
 
-INSERT INTO tbm.tbm_runtime_parameters (code,name,subsystem_id,data_type,unit,digits,is_alarm,sort_order)
+INSERT INTO tbm.runtime_parameters (code,name,subsystem_id,data_type,unit,digits,is_alarm,sort_order)
 SELECT v.code,v.name,ss.id,v.data_type,v.unit,v.digits,v.is_alarm,v.sort_order 
-FROM tbm.tbm_subsystems ss
+FROM tbm.subsystems ss
 CROSS JOIN (
   VALUES 
 ('s270001001','进水压力','double','bar',2,false,344001),
@@ -431,9 +431,9 @@ CROSS JOIN (
 WHERE ss.code = 's27'
 ON CONFLICT (code) DO NOTHING;
 
-INSERT INTO tbm.tbm_runtime_parameters (code,name,subsystem_id,data_type,unit,digits,is_alarm,sort_order)
+INSERT INTO tbm.runtime_parameters (code,name,subsystem_id,data_type,unit,digits,is_alarm,sort_order)
 SELECT v.code,v.name,ss.id,v.data_type,v.unit,v.digits,v.is_alarm,v.sort_order 
-FROM tbm.tbm_subsystems ss
+FROM tbm.subsystems ss
 CROSS JOIN (
   VALUES 
 ('s280013001','盾尾密封当前环累计量','double','L',2,false,354001),
@@ -511,9 +511,9 @@ CROSS JOIN (
 WHERE ss.code = 's28'
 ON CONFLICT (code) DO NOTHING;
 
-INSERT INTO tbm.tbm_runtime_parameters (code,name,subsystem_id,data_type,unit,digits,is_alarm,sort_order)
+INSERT INTO tbm.runtime_parameters (code,name,subsystem_id,data_type,unit,digits,is_alarm,sort_order)
 SELECT v.code,v.name,ss.id,v.data_type,v.unit,v.digits,v.is_alarm,v.sort_order 
-FROM tbm.tbm_subsystems ss
+FROM tbm.subsystems ss
 CROSS JOIN (
   VALUES 
 ('s300101001','推进泵压力','double','bar',2,false,362001),
@@ -524,9 +524,9 @@ CROSS JOIN (
 WHERE ss.code = 's30'
 ON CONFLICT (code) DO NOTHING;
 
-INSERT INTO tbm.tbm_runtime_parameters (code,name,subsystem_id,data_type,unit,digits,is_alarm,sort_order)
+INSERT INTO tbm.runtime_parameters (code,name,subsystem_id,data_type,unit,digits,is_alarm,sort_order)
 SELECT v.code,v.name,ss.id,v.data_type,v.unit,v.digits,v.is_alarm,v.sort_order 
-FROM tbm.tbm_subsystems ss
+FROM tbm.subsystems ss
 CROSS JOIN (
   VALUES 
 ('s310000001','功率因数','double','cos',2,false,366001),

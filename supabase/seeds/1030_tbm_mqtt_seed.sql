@@ -1,4 +1,4 @@
-insert into eqp.mqtt_user (
+insert into tbm.mqtt_user (
   username,
   user_type,
   password_hash,

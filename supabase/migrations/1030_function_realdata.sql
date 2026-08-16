@@ -1,7 +1,7 @@
 
 --查询盾构机(本区间)实时数据的时间范围和环号范围
 create or replace function tbm.fn_get_tbm_realdata_limits(
-  p_tbm_id uuid
+  p_tbm_code text
 )
 returns table (
   min_time timestamptz,
@@ -20,13 +20,13 @@ begin
   select lower(t.code)
   into v_tbm_code
   from tbm.tbm_assignments a
-  join tbm.tbms t on t.id = a.tbm_id
-  where a.tbm_id = p_tbm_id
+  join tbm.tbms t on t.code = a.tbm_code
+  where a.tbm_code= p_tbm_code
     and a.end_date is null
   limit 1;
 
   if v_tbm_code is null then
-    raise exception 'TBM assignment not found for TBM: %', p_tbm_id;
+    raise exception 'TBM assignment not found for TBM: %', p_tbm_code;
   end if;
 
   v_tbm_code := regexp_replace(v_tbm_code, '[^a-z0-9_]', '_', 'g');
@@ -40,12 +40,12 @@ begin
       min(s100100008)::integer as min_ring,
       max(s100100008)::integer as max_ring
     from realdata.%I
-    where tbm_id = $1
+    where tbm_code =  $1
       and s100100008 is not null
     ',
     v_table_name
   )
-  using p_tbm_id;
+  using p_tbm_code;
 end;
 $$;
 
@@ -53,7 +53,7 @@ $$;
 
 -- 查询盾构机参数历史数据，按环号(所工作时间)查询，适用于需要展示环号范围内数据的场景
 create or replace function tbm.fn_get_tbm_param_history_by_ring(
-  p_tbm_id uuid,
+  p_tbm_code text,
   p_from_ring integer,
   p_to_ring integer,
   p_fields text[],
@@ -90,7 +90,7 @@ begin
   into v_tbm_code
   from tbm.tbm_assignments a
   join tbm.tbms t on t.id = a.tbm_id
-  where a.tbm_id = p_tbm_id
+  where a.tbm_id = (select id from tbm.tbms where code = p_tbm_code)
     and a.end_date is null
   limit 1;
 
@@ -142,7 +142,7 @@ begin
       s100100008::integer as ring,
       jsonb_build_object(%s) as data
     from realdata.%I
-    where tbm_id = $1
+    where tbm_code = $1
       and s100100008 is not null
       and s100100008 >= $2
       and s100100008 <= $3
@@ -153,7 +153,7 @@ begin
     v_table_name,
     v_work_mode_sql
   )
-  using p_tbm_id, p_from_ring, p_to_ring;
+  using p_tbm_code, p_from_ring, p_to_ring;
 end;
 $$;
 
@@ -162,7 +162,7 @@ $$;
 
 -- 查询盾构机参数历史数据，按时间查询，适用于需要展示时间范围内数据的场景
 create or replace function tbm.fn_get_tbm_param_history_by_time(
-  p_tbm_id uuid,
+  p_tbm_code text,
   p_from timestamptz,
   p_to timestamptz,
   p_fields text[],
@@ -199,7 +199,7 @@ begin
   into v_tbm_code
   from tbm.tbm_assignments a
   join tbm.tbms t on t.id = a.tbm_id
-  where a.tbm_id = p_tbm_id
+  where a.tbm_id = (select id from tbm.tbms where code = p_tbm_code)
     and a.end_date is null
   limit 1;
 
@@ -251,7 +251,7 @@ begin
       s100100008::integer as ring,
       jsonb_build_object(%s) as data
     from realdata.%I
-    where tbm_id = $1
+    where tbm_code = $1
       and recorded_at >= $2
       and recorded_at <= $3
       %s
@@ -261,14 +261,14 @@ begin
     v_table_name,
     v_work_mode_sql
   )
-  using p_tbm_id, p_from, p_to;
+  using p_tbm_code, p_from, p_to;
 end;
 $$;
 
 
 -- 查询时间段内的掘进机工作状态变化和环号变化，状态包括：advance、assembly、stop、offline（掉线）。环号变化单独成一段，类型为ring。掉线由两种情况触发：1）状态断点：相邻两条记录的时间差超过p_offline_gap_minutes；2）数据缺失：查询时间段内没有任何记录，或第一条记录距离查询开始时间超过p_offline_gap_minutes，或最后一条记录距离查询结束时间超过p_offline_gap_minutes。
-create or replace function eqp.fn_get_tbm_work_timeline(
-  p_tbm_id uuid,
+create or replace function tbm.fn_get_tbm_work_timeline(
+  p_tbm_code text,
   p_start_at timestamptz,
   p_end_at timestamptz,
   p_offline_gap_minutes integer default 5
@@ -304,8 +304,8 @@ declare
 
   v_gap interval := make_interval(mins => p_offline_gap_minutes);
 begin
-  if p_tbm_id is null then
-    raise exception 'p_tbm_id cannot be null';
+  if p_tbm_code is null then
+    raise exception 'p_tbm_code cannot be null';
   end if;
 
   if p_start_at is null or p_end_at is null then
@@ -319,8 +319,8 @@ begin
   select t.code
   into v_tbm_code
   from tbm.tbm_assignments a
-  join tbm.tbms t on t.id = a.tbm_id
-  where a.tbm_id = p_tbm_id
+  join tbm.tbms t on t.code = a.tbm_code
+  where a.tbm_code = p_tbm_code
     and a.end_date is null
   order by a.start_date desc nulls last
   limit 1;

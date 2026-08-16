@@ -1,5 +1,5 @@
 
-INSERT INTO tbm.tbm_subsystems 
+INSERT INTO tbm.subsystems 
 (code, name, remark) 
 VALUES 
 ('b00', '启动模式', null), 

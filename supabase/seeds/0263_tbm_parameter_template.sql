@@ -1,5 +1,5 @@
 
-INSERT INTO tbm.tbm_parameter_templates
+INSERT INTO tbm.parameter_templates
  (code, name, tbm_type_id, diameter, is_default, sort_order, is_disabled, remark) 
  select v.code, v.name, mt.id, v.diameter, v.is_default, v.sort_order, v.is_disabled, v.remark
  from public.master_data mt
@@ -12,10 +12,10 @@ on conflict (code) do nothing;
 
 
 
-INSERT INTO tbm.tbm_parameter_template_parameters
+INSERT INTO tbm.parameter_template_parameters
  (template_id, parameter_id, sort_order, is_required)
  select t.id, v.parameter_id, v.sort_order, v.is_required
- from tbm.tbm_parameter_templates t
+ from tbm.parameter_templates t
  cross join (
     values 
     ( 1, 1, true),

@@ -86,3 +86,68 @@ create table proj.tunnel_risks (
   updated_at timestamptz not null default now(),
   deleted_at timestamptz
 );
+
+-- 开启实时订阅
+alter publication supabase_realtime add table proj.tunnel_risks;
+
+create table if not exists proj.risk_solutions (
+  id uuid primary key default gen_random_uuid(),
+
+  code text null,
+  name text not null,
+
+  applicable_conditions text null,
+  summary text null,
+
+  source_risk_id uuid null
+    references proj.tunnel_risks(id)
+    on delete set null,
+
+  remark text null,
+
+  is_template boolean not null default false,
+  is_disabled boolean not null default false,
+
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+
+  constraint ck_risk_solutions_name_not_blank
+    check (btrim(name) <> ''),
+
+  constraint ck_risk_solutions_code_not_blank
+    check (code is null or btrim(code) <> '')
+);
+
+create unique index if not exists uq_risk_solutions_code
+  on proj.risk_solutions(code)
+  where code is not null;
+
+
+create table if not exists proj.risk_solution_items (
+  id uuid primary key default gen_random_uuid(),
+
+  solution_id uuid not null
+    references proj.risk_solutions(id)
+    on delete cascade,
+
+  item_no smallint not null,
+  title text null,
+  content text not null,
+
+  category text null,
+
+  is_required boolean not null default true,
+  sort_order smallint not null default 0,
+
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+
+  constraint uq_risk_solution_items_no
+    unique (solution_id, item_no),
+
+  constraint ck_risk_solution_items_content_not_blank
+    check (btrim(content) <> ''),
+
+  constraint ck_risk_solution_items_item_no
+    check (item_no > 0)
+);

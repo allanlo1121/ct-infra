@@ -2,7 +2,6 @@
 
 create view tbm.v_tbm_list as
 select
-  t.id,
   t.code,
   t.name,
   t.manage_code,
@@ -25,7 +24,6 @@ where t.deleted_at is null;
 
 create view tbm.v_tbm_picker as
 select
-  t.id,
   t.code,
   t.name,
   t.manage_code,
@@ -39,7 +37,6 @@ where t.deleted_at is null;
 
 create or replace view tbm.v_tbm_detail as
 select
-  t.id,
   t.code,
   t.name,
   t.manage_code,
@@ -87,6 +84,8 @@ select
 
   bpc.id as config_id,
 
+  bpc.tbm_code,
+
   bpc.parameter_id,
   bpc.plc_tag_id,
 
@@ -122,12 +121,12 @@ select
   t.archive,
   t.sort_order as plc_sort_order
 
-from tbm.tbm_parameter_configs bpc
+from tbm.parameter_configs bpc
 
-join tbm.tbm_runtime_parameters p
+join tbm.runtime_parameters p
   on p.id = bpc.parameter_id
 
-join tbm.tbm_subsystems s
+join tbm.subsystems s
   on s.id = p.subsystem_id
 
 join tbm.plc_tags t
@@ -138,12 +137,12 @@ create view tbm.v_tbm_assignment_list as
 select
     a.id,
 
-    a.tbm_id,
+    a.tbm_code,
     tb.name as tbm_name,
-    tb.code as tbm_code,
-
+  
     a.tunnel_id,
     t.name as tunnel_name,
+    t.full_name as tunnel_full_name,
 
     p.id as project_id,
     p.name as project_name,    
@@ -156,7 +155,7 @@ select
 from tbm.tbm_assignments a
 
 join tbm.tbms tb
-    on tb.id = a.tbm_id
+    on tb.code = a.tbm_code
 
 join proj.tunnels t
     on t.id = a.tunnel_id
@@ -164,57 +163,6 @@ join proj.tunnels t
 left join proj.projects p
     on p.id = t.project_id;
 
-create or replace view tbm.v_tbm_parameter_configs as
-select
 
-    tp.id as tbm_parameter_id,
-    tp.tbm_id,
-
-    tp.custom_name,
-    tp.custom_unit,
-    tp.scale,
-    tp.value_offset,
-    tb.code as tbm_code,
-    tb.name as tbm_name,
-
-    -- subsystem
-    s.id as subsystem_id,
-    s.code as subsystem_code,
-    s.name as subsystem_name,  
-
-    -- runtime parameter
-    p.id as parameter_id,
-    p.code as parameter_code,
-    p.name as parameter_name,
-    p.unit as parameter_unit,
-    p.digits as parameter_digits,
-    p.data_type as parameter_data_type,
-    p.is_chartable,
-    p.sort_order,
-
-    -- plc tag
-    tp.plc_tag_id,
-    t.tag_name,
-    t.comment as plc_tag_comment,
-
-    t.data_type as plc_data_type,
-    t.unit as plc_unit,
-
-    t.archive,
-    tp.is_disabled
-
-from tbm.tbm_parameter_configs tp
-
-join tbm.tbms tb
-    on tb.id = tp.tbm_id
-
-join tbm.tbm_runtime_parameters p
-    on p.id = tp.parameter_id
-
-join tbm.tbm_subsystems s
-    on s.id = p.subsystem_id
-
-left join tbm.plc_tags t
-    on t.id = tp.plc_tag_id;
 
 

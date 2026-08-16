@@ -3,7 +3,7 @@
 -- TBM SUBSYSTEMS
 -- =========================================================
 
-create table tbm.tbm_subsystems (
+create table tbm.subsystems (
 
     id smallint generated always as identity primary key,
 
@@ -23,14 +23,14 @@ create table tbm.tbm_subsystems (
     remark text
 );
 
-comment on table tbm.tbm_subsystems
+comment on table tbm.subsystems
 is '盾构机子系统';
 
 -- =========================================================
 -- TBM RUNTIME PARAMETERS
 -- =========================================================
 
-create table tbm.tbm_runtime_parameters (
+create table tbm.runtime_parameters (
 
     id integer generated always as identity primary key,
     -- s050001001
@@ -40,7 +40,7 @@ create table tbm.tbm_runtime_parameters (
     ),
     name text not null,
     subsystem_id smallint not null
-        references tbm.tbm_subsystems(id),
+        references tbm.subsystems(id),
     -- boolean / integer / double
     data_type text not null
     check (
@@ -65,14 +65,14 @@ create table tbm.tbm_runtime_parameters (
     remark text
 );
 
-comment on table tbm.tbm_runtime_parameters
+comment on table tbm.runtime_parameters
 is '盾构机运行参数定义';
 
 -- =========================================================
 -- TBM PARAMETER TEMPLATES
 -- =========================================================
 
-create table tbm.tbm_parameter_templates (
+create table tbm.parameter_templates (
 
     id smallint generated always as identity primary key,
 
@@ -93,10 +93,10 @@ create table tbm.tbm_parameter_templates (
     remark text
 );
 
-comment on table tbm.tbm_parameter_templates
+comment on table tbm.parameter_templates
 is '盾构机参数模板';
 
-create or replace view tbm.v_tbm_parameter_templates_list as
+create or replace view tbm.v_parameter_templates_list as
 select
   t.id,
   t.code,
@@ -109,7 +109,7 @@ select
   t.diameter,
   t.sort_order,
   t.remark
-from tbm.tbm_parameter_templates t
+from tbm.parameter_templates t
 join public.master_data md
   on md.id = t.tbm_type_id;
 
@@ -117,13 +117,13 @@ join public.master_data md
 -- TEMPLATE PARAMETERS
 -- =========================================================
 
-create table tbm.tbm_parameter_template_parameters (
+create table tbm.parameter_template_parameters (
 
     template_id smallint not null
-        references tbm.tbm_parameter_templates(id),
+        references tbm.parameter_templates(id),
 
     parameter_id integer not null
-        references tbm.tbm_runtime_parameters(id),
+        references tbm.runtime_parameters(id),
 
     sort_order integer not null default 0,
 
@@ -135,15 +135,15 @@ create table tbm.tbm_parameter_template_parameters (
     )
 );
 
-comment on table tbm.tbm_parameter_template_parameters
+comment on table tbm.parameter_template_parameters
 is '模板参数绑定';
 
 create table tbm.plc_tags (
 
     id bigserial primary key,
 
-    tbm_id uuid not null
-        references tbm.tbms(id),
+    tbm_code text not null
+        references tbm.tbms(code),
 
     tag_name text not null,
 
@@ -162,7 +162,7 @@ create table tbm.plc_tags (
     sort_order integer not null default 0,
 
     unique (
-        tbm_id,
+        tbm_code,
         tag_name
     )
 );
@@ -171,15 +171,15 @@ create table tbm.plc_tags (
 -- TBM PARAMETER CONFIGURATIONS
 -- =========================================================
 
-create table tbm.tbm_parameter_configs (
+create table tbm.parameter_configs (
 
     id bigserial primary key,
 
-    tbm_id uuid not null
-        references tbm.tbms(id),
+    tbm_code text not null
+        references tbm.tbms(code),
 
     parameter_id integer not null
-        references tbm.tbm_runtime_parameters(id),
+        references tbm.runtime_parameters(id),
 
     plc_tag_id bigint
         references tbm.plc_tags(id),
@@ -195,12 +195,12 @@ create table tbm.tbm_parameter_configs (
 
     remark text,
     unique (
-        tbm_id,
+        tbm_code,
         parameter_id
     )
 );
 
-comment on table tbm.tbm_parameter_configs
+comment on table tbm.parameter_configs
 is 'TBM实际运行参数';
 
 
@@ -213,7 +213,7 @@ create table tbm.tbm_parameter_threshold_rules (
     id bigserial primary key,
 
     binding_id bigserial not null
-        references tbm.tbm_parameter_configs(id)
+        references tbm.parameter_configs(id)
         on delete cascade,
 
     level smallint not null
@@ -244,15 +244,15 @@ comment on table tbm.tbm_parameter_threshold_rules
 is 'TBM参数报警规则';
 
 
-create table tbm.tbm_parameter_template_threshold_rules (
+create table tbm.parameter_template_threshold_rules (
 
     id bigserial primary key,
 
     template_id smallint not null
-        references tbm.tbm_parameter_templates(id),
+        references tbm.parameter_templates(id),
 
     parameter_id integer not null
-        references tbm.tbm_runtime_parameters(id),
+        references tbm.runtime_parameters(id),
 
     level smallint not null,
 
@@ -289,14 +289,14 @@ create table tbm.tbm_parameter_template_threshold_rules (
     is_active boolean not null default true
 );
 
-comment on table tbm.tbm_parameter_template_threshold_rules
+comment on table tbm.parameter_template_threshold_rules
 is 'TBM参数模板报警规则';
 
 
 
 
 
-create or replace view tbm.v_tbm_runtime_parameters_list as
+create or replace view tbm.v_runtime_parameters_list as
 select
     p.id,
     p.code,
@@ -311,11 +311,11 @@ select
     p.is_chartable,
     p.sort_order,
     p.is_disabled
-from tbm.tbm_runtime_parameters p
-join tbm.tbm_subsystems s
+from tbm.runtime_parameters p
+join tbm.subsystems s
   on s.id = p.subsystem_id;
 
-create or replace view tbm.v_tbm_runtime_parameters_picker as
+create or replace view tbm.v_runtime_parameters_picker as
 select
     p.id,
     p.code,
@@ -323,8 +323,8 @@ select
     s.code as subsystem_code,
     s.name as subsystem_name,
     p.is_chartable
-from tbm.tbm_runtime_parameters p
-join tbm.tbm_subsystems s
+from tbm.runtime_parameters p
+join tbm.subsystems s
   on s.id = p.subsystem_id
 where p.is_disabled = false;
 
@@ -335,14 +335,187 @@ where p.is_disabled = false;
 -- INDEXES
 -- =========================================================
 
-create index idx_tbm_parameter_configs_tbm
-on tbm.tbm_parameter_configs(tbm_id);
+create index idx_parameter_configs_tbm
+on tbm.parameter_configs(tbm_code);
 
-create index idx_tbm_parameter_configs_parameter
-on tbm.tbm_parameter_configs(parameter_id);
+create index idx_parameter_configs_parameter
+on tbm.parameter_configs(parameter_id);
 
-create index idx_tbm_parameter_threshold_rules_binding
-on tbm.tbm_parameter_threshold_rules(binding_id);
+create index idx_parameter_threshold_rules_binding
+on tbm.parameter_threshold_rules(binding_id);
 
-create index idx_tbm_runtime_parameters_subsystem
-on tbm.tbm_runtime_parameters(subsystem_id);
+create index idx_runtime_parameters_subsystem
+on tbm.runtime_parameters(subsystem_id);
+
+
+create type tbm.threshold_type as enum (
+    'upper',
+    'lower',
+    'deviation',
+    'range'
+);
+
+
+create table tbm.parameter_threshold_templates (
+
+    id bigserial primary key,
+
+    parameter_id bigint not null references tbm.runtime_parameters(id),
+
+    severity tbm.alarm_severity not null,
+
+    threshold_type tbm.threshold_type not null,
+
+    reference_value double precision default 0,
+
+    threshold_value double precision,
+
+    min_value double precision,
+
+    max_value double precision,
+
+    remark text,
+
+    unique(parameter_id,severity)
+);
+
+
+create table tbm.parameter_threshold_overrides (
+
+    id bigserial primary key,
+
+    tbm_code text not null references tbm.tbms(code),
+
+    parameter_id bigint not null references tbm.runtime_parameters(id),
+
+    severity tbm.alarm_severity not null,
+
+    threshold_type tbm.threshold_type not null,
+
+    reference_value double precision default 0,
+
+    threshold_value double precision,
+
+    min_value double precision,
+
+    max_value double precision,
+
+    remark text,
+
+    unique(tbm_code, parameter_id, severity)
+);
+
+
+
+
+
+
+create or replace function tbm.fn_get_parameter_threshold_rules(
+    p_tbm_code text
+)
+returns table (
+    parameter_id bigint,
+    parameter_code text,
+    severity tbm.alarm_severity,
+    threshold_type tbm.threshold_type,
+    reference_value double precision,
+    threshold_value double precision,
+    min_value double precision,
+    max_value double precision,
+    source_type text
+)
+language sql
+stable
+as $$
+
+    select
+        x.parameter_id,
+        p.code as parameter_code,
+        x.severity,
+        x.threshold_type,
+        x.reference_value,
+        x.threshold_value,
+        x.min_value,
+        x.max_value,
+        x.source_type
+
+    from (
+
+        -- TBM 单独配置 override
+        select
+            o.parameter_id,
+            o.severity,
+            o.threshold_type,
+            o.reference_value,
+            o.threshold_value,
+            o.min_value,
+            o.max_value,
+            'override' as source_type,
+            1 as priority
+
+        from tbm.parameter_threshold_overrides o
+
+        where o.tbm_code = p_tbm_code
+
+
+        union all
+
+
+        -- 参数模板配置
+        select
+            t.parameter_id,
+            t.severity,
+            t.threshold_type,
+            t.reference_value,
+            t.threshold_value,
+            t.min_value,
+            t.max_value,
+            'template' as source_type,
+            2 as priority
+
+        from tbm.parameter_threshold_templates t
+
+
+    ) x
+
+
+    join tbm.runtime_parameters p
+        on p.id = x.parameter_id
+
+
+    where x.priority = (
+
+        select min(y.priority)
+
+        from (
+
+            select
+                o.parameter_id,
+                o.severity,
+                1 as priority
+
+            from tbm.parameter_threshold_overrides o
+
+            where o.tbm_code = p_tbm_code
+
+
+            union all
+
+
+            select
+                t.parameter_id,
+                t.severity,
+                2 as priority
+
+            from tbm.parameter_threshold_templates t
+
+
+        ) y
+
+
+        where y.parameter_id = x.parameter_id
+          and y.severity = x.severity
+
+    );
+
+$$;
