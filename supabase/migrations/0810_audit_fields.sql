@@ -586,25 +586,25 @@ alter table tbm.tbm_assignments
 add column deleted_by uuid
 references hr.employees(id) on delete set null;
 
---add audit fields to tbm.tbm_daily_progress
-alter table tbm.tbm_daily_progress
+--add audit fields to runtime.tbm_daily_progress
+alter table runtime.tbm_daily_progress
 add column created_at timestamptz default now();
 
-alter table tbm.tbm_daily_progress
+alter table runtime.tbm_daily_progress
 add column updated_at timestamptz;
 
-alter table tbm.tbm_daily_progress
+alter table runtime.tbm_daily_progress
 add column deleted_at timestamptz;
 
-alter table tbm.tbm_daily_progress
+alter table runtime.tbm_daily_progress
 add column created_by uuid
 references hr.employees(id) on delete set null;
 
-alter table tbm.tbm_daily_progress
+alter table runtime.tbm_daily_progress
 add column updated_by uuid
 references hr.employees(id) on delete set null;
 
-alter table tbm.tbm_daily_progress
+alter table runtime.tbm_daily_progress
 add column deleted_by uuid
 references hr.employees(id) on delete set null;
 

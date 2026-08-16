@@ -39,11 +39,6 @@ $$
 
 with daily as (
 
-    /*
-     * 先计算 lag。
-     * 不能先按 p_start_date 过滤，
-     * 否则统计区间第一天拿不到上一天的 ring_end / chainage_end。
-     */
     select
         p.id,
         p.tbm_code,
@@ -71,15 +66,9 @@ with daily as (
 
 progress as (
 
-    /*
-     * lag 完成后，再过滤开始日期。
-     */
     select
         d.tbm_code,
         d.work_date,
-
-        d.ring_start,
-        d.ring_end,
 
         case
             when d.ring_start is null
@@ -89,9 +78,6 @@ progress as (
                 d.ring_end - d.ring_start
             )
         end as completed_ring_count,
-
-        d.chainage_start,
-        d.chainage_end,
 
         case
             when d.chainage_start is null
@@ -139,7 +125,7 @@ progress_summary as (
 plan_summary as (
 
     select
-        ta.tbm_code,
+        tp.tunnel_id,
 
         sum(
             dp.plan_ring_count
@@ -155,8 +141,6 @@ plan_summary as (
 
     join proj.tunnel_plan_days dp
         on dp.plan_id = tp.id
-    left join tbm.tbm_assignments ta
-        on ta.tunnel_id = tp.tunnel_id
 
     where
         tp.status = 'active'
@@ -172,7 +156,7 @@ plan_summary as (
         )
 
     group by
-        ta.tbm_code
+        tp.tunnel_id
 ),
 
 tbm_info as (
@@ -186,9 +170,6 @@ tbm_info as (
 
         tbm.name
             as tbm_name,
-
-        tbm.code
-            as tbm_code,
 
         t.project_id,
 
@@ -220,8 +201,8 @@ tbm_info as (
     left join proj.projects p
         on p.id = t.project_id
 
-     left join public.master_data region
-    on region.id = p.region_id
+    left join public.master_data region
+        on region.id = p.region_id
 
     order by
         ta.tbm_code,
@@ -229,12 +210,10 @@ tbm_info as (
 )
 
 select
-
     info.tunnel_id,
 
     ps.tbm_code,
     info.tbm_name,
-    info.tbm_code,
 
     info.project_id,
     info.project_name,
@@ -267,11 +246,11 @@ select
 
 from progress_summary ps
 
-left join plan_summary plan
-    on plan.tbm_code = ps.tbm_code
-
 left join tbm_info info
     on info.tbm_code = ps.tbm_code
+
+left join plan_summary plan
+    on plan.tunnel_id = info.tunnel_id
 
 order by
     info.sort_order nulls last,

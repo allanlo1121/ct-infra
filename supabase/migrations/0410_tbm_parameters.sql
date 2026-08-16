@@ -209,7 +209,7 @@ is 'TBM实际运行参数';
 -- THRESHOLD RULES
 -- =========================================================
 
-create table tbm.tbm_parameter_threshold_rules (
+create table tbm.parameter_threshold_rules (
     id bigserial primary key,
 
     binding_id bigserial not null
@@ -240,7 +240,7 @@ create table tbm.tbm_parameter_threshold_rules (
     )
 );
 
-comment on table tbm.tbm_parameter_threshold_rules
+comment on table tbm.parameter_threshold_rules
 is 'TBM参数报警规则';
 
 
@@ -354,6 +354,21 @@ create type tbm.threshold_type as enum (
     'deviation',
     'range'
 );
+
+create type tbm.alarm_severity as enum (
+  'warning',
+  'critical',
+  'emergency'
+);
+
+create type tbm.tbm_phase_type as enum (
+  'advance',
+  'assembly',
+  'stop',
+  'fault',
+  'unknown'
+);
+
 
 
 create table tbm.parameter_threshold_templates (

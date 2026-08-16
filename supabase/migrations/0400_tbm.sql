@@ -116,4 +116,4 @@ exclude using gist (
 -- 开启实时订阅
 alter publication supabase_realtime add table tbm.tbm_assignments;
 -- DELETE 保留old 数据
-alter table tbm.tbm_assignmentsreplica identity full;
+alter table tbm.tbm_assignments replica identity full;

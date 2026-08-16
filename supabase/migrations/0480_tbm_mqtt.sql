@@ -281,12 +281,12 @@ begin
 end
 $$;
 
-grant usage on schema eqp to emqx_user;
+grant usage on schema tbm to emqx_user;
 
-grant select on table eqp.mqtt_user to emqx_user;
-grant select on table eqp.mqtt_acl to emqx_user;
+grant select on table tbm.mqtt_user to emqx_user;
+grant select on table tbm.mqtt_acl to emqx_user;
 
-alter default privileges in schema eqp
+alter default privileges in schema tbm
 grant select on tables to emqx_user;
 
 
@@ -314,14 +314,14 @@ end
 $$;
 
 grant usage
-on schema eqp
+on schema tbm
 to tbm_writer;
 
 grant insert
-on all tables in schema eqp
+on all tables in schema tbm
 to tbm_writer;
 
-alter default privileges in schema eqp
+alter default privileges in schema tbm
 grant insert on tables to tbm_writer;
 
 

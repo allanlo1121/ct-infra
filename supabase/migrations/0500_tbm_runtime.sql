@@ -27,19 +27,7 @@ alter default privileges for role postgres in schema runtime
 grant usage, select
 on sequences to authenticated, service_role;
 
-create type runtime.tbm_phase_type as enum (
-  'advance',
-  'assembly',
-  'stop',
-  'fault',
-  'unknown'
-);
 
-create type runtime.alarm_severity as enum (
-  'warning',
-  'critical',
-  'emergency'
-);
 
 
 
@@ -49,7 +37,7 @@ create table if not exists runtime.tbm_runtime_state_current (
   ring_no int null,
   chainage numeric null,
 
-  phase_type runtime.tbm_phase_type not null,
+  phase_type tbm.tbm_phase_type not null,
 
   thrust_speed numeric null,
   thrust_pressure numeric null,
@@ -75,7 +63,7 @@ create table runtime.tbm_phase_records (
   start_chainage numeric null,
   end_chainage numeric null,
 
-  phase_type runtime.tbm_phase_type not null,
+  phase_type tbm.tbm_phase_type not null,
 
   start_at timestamptz not null,
 
@@ -118,7 +106,7 @@ create table runtime.parameter_alarms (
 
     alarm_value numeric,
 
-    severity runtime.alarm_severity not null,   
+    severity tbm.alarm_severity not null,   
 
     created_at timestamptz default now(),
     updated_at timestamptz default now(),
@@ -143,7 +131,7 @@ create table runtime.parameter_alarm_history (
 
     alarm_value numeric,
 
-    severity runtime.alarm_severity not null,
+    severity tbm.alarm_severity not null,
 
     event_type text not null,
 

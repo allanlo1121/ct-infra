@@ -202,7 +202,7 @@ select
 
     a.updated_at
 
-from tbm.parameter_alarms a
+from runtime.parameter_alarms a
 
 left join tbm.runtime_parameters p
     on p.code = a.parameter_code
