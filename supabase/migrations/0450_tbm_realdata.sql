@@ -1,6 +1,8 @@
 create schema if not exists realdata;
 
-create or replace function tbm.sync_realdata_table(p_tbm_code text)
+create or replace function tbm.sync_realdata_table(
+  p_tbm_code text
+)
 returns text
 language plpgsql
 security definer
@@ -8,163 +10,493 @@ set search_path = tbm, realdata, public
 as $$
 declare
   v_table_schema text := 'realdata';
+
+  v_tbm_code text;
+  v_table_code text;
   v_table_name text;
   v_table_regclass regclass;
-  v_tbm_code text;
-  r record;
+
   v_seq_name text;
-  v_null_count int;
+  v_null_count bigint;
+  v_constraint_name text;
+
+  r record;
+
 begin
-  if p_tbm_code is null then
-    raise exception 'p_tbm_code cannot be null';
+
+  ----------------------------------------------------------
+  -- 1. 参数校验
+  ----------------------------------------------------------
+
+  if p_tbm_code is null
+     or btrim(p_tbm_code) = '' then
+    raise exception
+      'p_tbm_code cannot be null or empty';
   end if;
 
-  -- 获取 TBM code
-  select lower(code)
+
+  ----------------------------------------------------------
+  -- 2. 获取 TBM
+  ----------------------------------------------------------
+
+  select code
     into v_tbm_code
     from tbm.tbms
    where code = p_tbm_code;
 
   if v_tbm_code is null then
-    raise exception 'TBM not found: %', p_tbm_code;
+    raise exception
+      'TBM not found: %',
+      p_tbm_code;
   end if;
 
-  v_tbm_code := regexp_replace(v_tbm_code, '[^a-z0-9_]', '_', 'g');
-  v_table_name := 'shield_' || v_tbm_code;
 
-  -- 检查表是否存在
-  v_table_regclass := to_regclass(format('%I.%I', v_table_schema, v_table_name));
+  ----------------------------------------------------------
+  -- 3. 生成表名
+  ----------------------------------------------------------
+
+  v_table_code :=
+    lower(v_tbm_code);
+
+  v_table_name :=
+    'shield_' || v_table_code;
+
+
+  ----------------------------------------------------------
+  -- 4. 获取表
+  ----------------------------------------------------------
+
+  v_table_regclass :=
+    to_regclass(
+      format(
+        '%I.%I',
+        v_table_schema,
+        v_table_name
+      )
+    );
+
+
+  ----------------------------------------------------------
+  -- 5. 表不存在：创建
+  ----------------------------------------------------------
 
   if v_table_regclass is null then
-    -- 表不存在，创建基础表
+
     execute format(
-      'create table %I.%I (
-         id bigint generated always as identity primary key,
-         recorded_at timestamptz not null,
-         tbm_code text not null references tbm.tbms(code)
-       )',
-      v_table_schema,
-      v_table_name
-    );
-  else
-    -- 表已存在，保证基础列存在
-    execute format(
-      'alter table %I.%I add column if not exists id bigint generated always as identity',
+      '
+      create table %I.%I (
+        id bigint generated always as identity primary key,
+
+        recorded_at timestamptz not null,
+
+        tbm_code text not null
+      )
+      ',
       v_table_schema,
       v_table_name
     );
 
+  end if;
+
+
+  ----------------------------------------------------------
+  -- 6. 基础字段
+  --
+  -- 无论新表还是旧表，都统一走这里
+  ----------------------------------------------------------
+
+  execute format(
+    '
+    alter table %I.%I
+    add column if not exists
+      id bigint generated always as identity
+    ',
+    v_table_schema,
+    v_table_name
+  );
+
+
+  execute format(
+    '
+    alter table %I.%I
+    add column if not exists
+      recorded_at timestamptz
+    ',
+    v_table_schema,
+    v_table_name
+  );
+
+
+  execute format(
+    '
+    alter table %I.%I
+    add column if not exists
+      tbm_code text
+    ',
+    v_table_schema,
+    v_table_name
+  );
+
+
+  ----------------------------------------------------------
+  -- 7. 回填 tbm_code
+  ----------------------------------------------------------
+
+  execute format(
+    '
+    update %I.%I
+       set tbm_code = $1
+     where tbm_code is null
+    ',
+    v_table_schema,
+    v_table_name
+  )
+  using v_tbm_code;
+
+
+  ----------------------------------------------------------
+  -- 8. 校验 tbm_code
+  ----------------------------------------------------------
+
+  execute format(
+    '
+    select count(*)
+      from %I.%I
+     where tbm_code is distinct from $1
+    ',
+    v_table_schema,
+    v_table_name
+  )
+  into v_null_count
+  using v_tbm_code;
+
+  if v_null_count > 0 then
+    raise exception
+      'Table %.% contains % rows with invalid tbm_code, expected: %',
+      v_table_schema,
+      v_table_name,
+      v_null_count,
+      v_tbm_code;
+  end if;
+
+
+  ----------------------------------------------------------
+  -- 9. tbm_code NOT NULL
+  ----------------------------------------------------------
+
+  execute format(
+    '
+    alter table %I.%I
+    alter column tbm_code set not null
+    ',
+    v_table_schema,
+    v_table_name
+  );
+
+
+  ----------------------------------------------------------
+  -- 10. recorded_at NOT NULL
+  ----------------------------------------------------------
+
+  execute format(
+    '
+    select count(*)
+      from %I.%I
+     where recorded_at is null
+    ',
+    v_table_schema,
+    v_table_name
+  )
+  into v_null_count;
+
+  if v_null_count = 0 then
+
     execute format(
-      'alter table %I.%I add column if not exists recorded_at timestamptz not null',
+      '
+      alter table %I.%I
+      alter column recorded_at set not null
+      ',
       v_table_schema,
       v_table_name
     );
 
+  end if;
+
+
+  ----------------------------------------------------------
+  -- 11. tbm_code 外键
+  --
+  -- 直接按 constraint name 判断。
+  -- 已存在则完全跳过。
+  ----------------------------------------------------------
+
+  v_constraint_name :=
+    'fk_' || v_table_code || '_tbm_code';
+
+  if not exists (
+    select 1
+      from pg_constraint c
+      join pg_class t
+        on t.oid = c.conrelid
+      join pg_namespace n
+        on n.oid = t.relnamespace
+     where n.nspname = v_table_schema
+       and t.relname = v_table_name
+       and c.conname = v_constraint_name
+  ) then
+
     execute format(
-      'alter table %I.%I add column if not exists tbm_code text not null references tbm.tbms(code)',
+      '
+      alter table %I.%I
+      add constraint %I
+      foreign key (tbm_code)
+      references tbm.tbms(code)
+      ',
       v_table_schema,
-      v_table_name
+      v_table_name,
+      v_constraint_name
     );
 
-    -- 设置 tbm_code NOT NULL 前先检查是否有 NULL
+  end if;
+
+
+  ----------------------------------------------------------
+  -- 12. id 主键
+  ----------------------------------------------------------
+
+  if not exists (
+    select 1
+      from pg_constraint c
+      join pg_class t
+        on t.oid = c.conrelid
+      join pg_namespace n
+        on n.oid = t.relnamespace
+     where n.nspname = v_table_schema
+       and t.relname = v_table_name
+       and c.contype = 'p'
+  ) then
+
+    --------------------------------------------------------
+    -- 检查 NULL
+    --------------------------------------------------------
+
     execute format(
-      'select count(*) from %I.%I where tbm_code is null',
+      '
+      select count(*)
+        from %I.%I
+       where id is null
+      ',
       v_table_schema,
       v_table_name
     )
     into v_null_count;
 
-    if v_null_count = 0 then
-      execute format(
-        'alter table %I.%I alter column tbm_code set not null',
+    if v_null_count > 0 then
+      raise exception
+        'Cannot create primary key on %.%: id contains % NULL rows',
         v_table_schema,
-        v_table_name
-      );
+        v_table_name,
+        v_null_count;
     end if;
+
+
+    --------------------------------------------------------
+    -- 检查重复
+    --------------------------------------------------------
+
+    execute format(
+      '
+      select count(*)
+        from (
+          select id
+            from %I.%I
+           group by id
+          having count(*) > 1
+        ) t
+      ',
+      v_table_schema,
+      v_table_name
+    )
+    into v_null_count;
+
+    if v_null_count > 0 then
+      raise exception
+        'Cannot create primary key on %.%: id contains duplicate values',
+        v_table_schema,
+        v_table_name;
+    end if;
+
+
+    --------------------------------------------------------
+    -- 创建主键
+    --------------------------------------------------------
+
+    execute format(
+      '
+      alter table %I.%I
+      add primary key (id)
+      ',
+      v_table_schema,
+      v_table_name
+    );
+
   end if;
 
-  -- 添加 TBM 参数字段
+
+  ----------------------------------------------------------
+  -- 13. 同步参数字段
+  ----------------------------------------------------------
+
   for r in
+
     select
-      p.code,
+      tp.parameter_code,
+
       case p.data_type
-        when 'boolean' then 'boolean'
-        when 'integer' then 'integer'
-        when 'double' then 'double precision'
-        when 'float' then 'double precision'
-        when 'numeric' then 'numeric'
-        when 'text' then 'text'
+        when 'boolean'
+          then 'boolean'
+
+        when 'integer'
+          then 'integer'
+
+        when 'double'
+          then 'double precision'
+
+        when 'float'
+          then 'double precision'
+
+        when 'numeric'
+          then 'numeric'
+
+        when 'text'
+          then 'text'
+
         else 'text'
       end as sql_type
-    from tbm.parameter_configs tp
-    join tbm.runtime_parameters p
-      on p.id = tp.parameter_id
-    where tp.tbm_code = p_tbm_code
-      and coalesce(p.is_disabled, false) = false
-    order by p.sort_order, p.code
+
+    from tbm.tbm_parameters tp
+
+    join tbm.parameters p
+      on p.code = tp.parameter_code
+
+    where tp.tbm_code = v_tbm_code
+
+    order by
+      p.sort_order nulls last,
+      tp.parameter_code
+
   loop
+
     execute format(
-      'alter table %I.%I add column if not exists %I %s',
+      '
+      alter table %I.%I
+      add column if not exists %I %s
+      ',
       v_table_schema,
       v_table_name,
-      r.code,
+      r.parameter_code,
       r.sql_type
     );
+
   end loop;
 
-  -- 创建索引
+
+  ----------------------------------------------------------
+  -- 14. recorded_at 索引
+  ----------------------------------------------------------
+
   execute format(
-    'create index if not exists %I on %I.%I(recorded_at desc)',
-    'idx_' || v_tbm_code || '_time',
+    '
+    create index if not exists %I
+    on %I.%I (recorded_at desc)
+    ',
+    'idx_' || v_table_code || '_recorded_at',
     v_table_schema,
     v_table_name
   );
 
-  execute format(
-    'create index if not exists %I on %I.%I(tbm_code, recorded_at desc)',
-    'idx_' || v_tbm_code || '_tbm_time',
-    v_table_schema,
-    v_table_name
-  );
 
-  -- 针对环号 s100100008 建索引，如果列存在
+  ----------------------------------------------------------
+  -- 15. 环号索引
+  --
+  -- s100100008 = 环号
+  ----------------------------------------------------------
+
   if exists (
     select 1
       from information_schema.columns
      where table_schema = v_table_schema
-       and table_name = lower(v_table_name)
+       and table_name = v_table_name
        and column_name = 's100100008'
   ) then
+
     execute format(
-      'create index if not exists %I on %I.%I(tbm_code, s100100008)',
-      'idx_' || v_tbm_code || '_tbm_ring',
+      '
+      create index if not exists %I
+      on %I.%I (s100100008)
+      ',
+      'idx_' || v_table_code || '_ring_no',
       v_table_schema,
       v_table_name
     );
+
   end if;
 
-  -- 授权 tbm_writer
+
+  ----------------------------------------------------------
+  -- 16. 授权 tbm_writer
+  --
+  -- GRANT 本身可以重复执行
+  ----------------------------------------------------------
+
   execute format(
-    'grant insert, select on %I.%I to tbm_writer',
+    '
+    grant select, insert
+    on table %I.%I
+    to tbm_writer
+    ',
     v_table_schema,
     v_table_name
   );
 
-  -- 授权序列
-  select sequence_name
-    into v_seq_name
-    from information_schema.sequences
-   where sequence_schema = v_table_schema
-     and sequence_name = format('%I_id_seq', v_table_name);
+
+  ----------------------------------------------------------
+  -- 17. identity sequence 授权
+  ----------------------------------------------------------
+
+  select pg_get_serial_sequence(
+    format(
+      '%I.%I',
+      v_table_schema,
+      v_table_name
+    ),
+    'id'
+  )
+  into v_seq_name;
 
   if v_seq_name is not null then
+
     execute format(
-      'grant usage, select on %I.%I to tbm_writer',
-      v_table_schema,
+      '
+      grant usage, select
+      on sequence %s
+      to tbm_writer
+      ',
       v_seq_name
     );
+
   end if;
 
-  return format('%I.%I', v_table_schema, v_table_name);
+
+  ----------------------------------------------------------
+  -- 18. 返回表名
+  ----------------------------------------------------------
+
+  return format(
+    '%I.%I',
+    v_table_schema,
+    v_table_name
+  );
+
 end;
 $$;

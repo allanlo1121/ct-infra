@@ -1,97 +1,22 @@
 
-create or replace view runtime.v_tunnel_runtime as
-select
-  t.id as tunnel_id,
-
-  ta.tbm_code,
-  tbm.name as tbm_name,
- 
-
-  t.project_id,
-  p.name as project_name,
-
-  p.organization_id,
-  o.name as organization_name,
-
-  region.id as region_id,
-  region.name as region_name,
-
-  t.name as tunnel_name,
-  t.full_name as tunnel_full_name,
-  t.prefix,
-
-  t.start_chainage,
-  t.end_chainage,
-
-  t.advance_direction,
-
-  t.start_ring,
-  t.end_ring,
-
-  t.actual_start_date,
-  t.actual_end_date,
-
-  tsv.schedule_start_date,
-  tsv.schedule_end_date,
-
-  t.longitude,
-  t.latitude,
-
-  t.sort_order,
-  t.remark,
-
-  ps.tunnel_status_id,
-  s.name as tunnel_status_name
-
-
-
-from proj.tunnels t
-
-left join proj.projects p
-  on p.id = t.project_id
-
-left join master_data region
-  on region.id = p.region_id
-
-left join hr.organizations o
-  on o.id = p.organization_id
- and o.deleted_at is null
-
-
-left join proj.tunnel_status_timeline ps
-  on ps.tunnel_id = t.id
- and ps.valid_to is null
-
-left join master_data s
-  on s.id = ps.tunnel_status_id
-
-
-left join (
-  select distinct on (tunnel_id)
-    id,
-    tunnel_id,
-    version_no,
-    schedule_start_date,
-    schedule_end_date
-  from proj.tunnel_schedule_versions
-  order by tunnel_id, version_no desc
-) tsv
-  on tsv.tunnel_id = t.id
-
-
-left join tbm.tbm_assignments ta
-  on ta.tunnel_id = t.id
-
-left join tbm.tbms tbm
-  on tbm.code = ta.tbm_code
-
- and ta.end_date is null;
-
+-- ============================================================
+-- Object:
+--
+-- Description: 区间风险状态视图
+--
+-- Purpose:
+--
+-- Data Source:tbm_risk_states
+--
+-- Business Rules:
+--
+-- Author:
+--
+-- Created:
+-- ============================================================
 
 create or replace view runtime.v_tunnel_risk_states
-with (security_invoker = true)
 as
-
 select
 
     rs.risk_id,
@@ -109,6 +34,9 @@ select
 
     r.start_chainage,
     r.end_chainage,
+
+    rs.enter_distance,
+    rs.exit_distance,
 
     r.burial_depth,
 
@@ -143,14 +71,17 @@ left join tbm.tbms tbm
 left join proj.geo_classes geo
   on geo.id = r.geo_class_id
 
-
 left join proj.geo_rock_classes rock
   on rock.id = r.geo_rock_class_id;
+
+grant select
+on runtime.v_tunnel_risk_states
+to anon, authenticated, service_role;
+
 
 
 
 create or replace view runtime.v_tbm_runtime_state as
-
 select
 
   t.*,
@@ -176,7 +107,6 @@ left join runtime.tbm_connection_status realdata
 
 
 create or replace view runtime.v_parameter_alarms
-with (security_invoker = true)
 as
 select
     a.id,
@@ -204,12 +134,11 @@ select
 
 from runtime.parameter_alarms a
 
-left join tbm.runtime_parameters p
+left join tbm.parameters p
     on p.code = a.parameter_code
 
 left join tbm.tbm_assignments ta
     on ta.tbm_code = a.tbm_code
-   and ta.end_date is null
 
 left join proj.tunnels t
     on t.id = ta.tunnel_id
@@ -221,7 +150,9 @@ left join public.master_data md
     on md.id = prj.region_id;
 
 
-
+grant select
+on runtime.v_parameter_alarms
+to anon, authenticated, service_role;
 
 
 create or replace view runtime.v_tunnel_progress_summary
@@ -691,3 +622,159 @@ left join plan_progress plp
   on plp.tbm_code = tr.tbm_code
 
 cross join periods p;
+
+
+grant select
+on runtime.v_tunnel_progress_summary
+to anon, authenticated, service_role;
+
+
+
+create or replace view runtime.v_tbm_assignments as
+select
+  t.id as tunnel_id,
+
+  ta.tbm_code,
+  tbm.name as tbm_name,
+  tbm_type.name as tbm_type_name,
+
+  t.project_id,
+  p.name as project_name,
+
+  p.organization_id,
+  o.name as organization_name,
+
+  region.id as region_id,
+  region.name as region_name,
+
+  t.name as tunnel_name,
+  t.full_name as tunnel_full_name,
+
+  t.start_chainage,
+  t.end_chainage,
+
+  t.advance_direction,
+
+  t.start_ring,
+  t.end_ring,
+
+  t.actual_start_date,
+  t.actual_end_date,
+
+  tsv.schedule_start_date,
+  tsv.schedule_end_date,
+
+  t.longitude,
+  t.latitude,
+
+  t.sort_order,
+
+  ps.tunnel_status_id,
+  s.name as tunnel_status_name
+
+from tbm.tbm_assignments ta
+
+left join tbm.tbms tbm
+  on tbm.code = ta.tbm_code
+
+left join public.master_data tbm_type
+  on tbm_type.id = tbm.tbm_type_id
+
+left join proj.tunnels t
+  on ta.tunnel_id = t.id
+
+left join proj.projects p
+  on p.id = t.project_id
+
+left join master_data region
+  on region.id = p.region_id
+
+left join hr.organizations o
+  on o.id = p.organization_id
+ and o.deleted_at is null
+
+
+left join proj.tunnel_status_timeline ps
+  on ps.tunnel_id = t.id
+ and ps.valid_to is null
+
+left join master_data s
+  on s.id = ps.tunnel_status_id
+
+left join (
+  select distinct on (tunnel_id)
+    id,
+    tunnel_id,
+    version_no,
+    schedule_start_date,
+    schedule_end_date
+  from proj.tunnel_schedule_versions
+  order by tunnel_id, version_no desc
+) tsv
+  on tsv.tunnel_id = t.id
+
+ and ta.end_date is null;
+
+
+grant select
+on runtime.v_tbm_assignments
+to anon, authenticated, service_role;
+
+
+create or replace view runtime.v_tbm_daily_progress as
+with progress_assignment as (
+  select
+    p.id,
+    p.tbm_code,
+    p.work_date,
+    p.ring_end,
+    p.chainage_end
+
+  from runtime.tbm_daily_progress p
+),
+
+progress_calculated as (
+  select
+    p.*,
+
+    lag(p.ring_end) over (
+      partition by p.tbm_code
+      order by p.work_date
+    ) as ring_start,
+
+    lag(p.chainage_end) over (
+      partition by p.tbm_code
+      order by p.work_date
+    ) as chainage_start
+
+  from progress_assignment p
+)
+
+select
+  p.id,
+
+  p.tbm_code,
+  p.work_date,
+  p.ring_start,
+  p.ring_end,
+
+  case
+    when p.ring_start is null then 0
+    else greatest(p.ring_end - p.ring_start, 0)
+  end as completed_ring_count,
+
+  p.chainage_start,
+  p.chainage_end,
+
+  case
+    when p.chainage_start is null then 0
+    else greatest(p.chainage_end - p.chainage_start, 0)
+  end as completed_length
+
+from progress_calculated p;
+
+
+
+grant select
+on runtime.v_tbm_daily_progress
+to anon, authenticated, service_role;

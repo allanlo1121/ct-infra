@@ -1,6 +1,6 @@
 
 INSERT INTO tbm.subsystems 
-(code, name, remark) 
+(code, name, description) 
 VALUES 
 ('b00', '启动模式', null), 
 ('b01', '报警系统', null),

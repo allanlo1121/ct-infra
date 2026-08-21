@@ -1,4 +1,27 @@
-create or replace function runtime.fn_get_tunnel_progress_period(
+
+-- ============================================================
+-- Function:
+--
+-- Description:获取不同日期区间的 TBM 进度汇总
+--
+-- Input:p_start_date:开始日期 p_end_date:结束日期
+--
+-- Output:
+--
+
+-- Data Source:runtime.daily_progress, tbm.tbm_assignments,
+--             proj.  tunnel_plans, proj.tunnel_plan_days
+
+-- Business Rules:
+--
+-- Example: select * from runtime.fn_get_tbm_progress_period(
+--                  '2026-08-10',
+--                  '2026-08-20');
+--
+--
+-- ============================================================
+
+create or replace function runtime.fn_get_tbm_progress_period(
     p_start_date date default null,
     p_end_date date default null
 )
@@ -29,18 +52,20 @@ returns table
     plan_ring_count numeric,
     plan_advance_meter numeric
 )
-
 language sql
-stable
 security definer
-set search_path = ''
 as
 $$
 
 with daily as (
 
+    /*
+     * 先计算 lag。
+     *
+     * 不能先过滤 p_start_date，
+     * 否则区间第一天无法拿到上一天的数据。
+     */
     select
-        p.id,
         p.tbm_code,
         p.work_date,
 
@@ -66,6 +91,10 @@ with daily as (
 
 progress as (
 
+    /*
+     * lag 计算完成后，
+     * 再过滤统计开始日期。
+     */
     select
         d.tbm_code,
         d.work_date,
@@ -97,6 +126,10 @@ progress as (
 
 progress_summary as (
 
+    /*
+     * 实绩：
+     * 按 TBM 汇总。
+     */
     select
         p.tbm_code,
 
@@ -122,8 +155,71 @@ progress_summary as (
         p.tbm_code
 ),
 
+tbm_info as (
+
+    /*
+     * TBM 当前分配关系：
+     *
+     * tbm_code
+     *      ↓
+     * tunnel_id
+     *
+     * 这里作为 progress 和 plan 的桥梁。
+     */
+    select distinct on (ta.tbm_code)
+
+        ta.tbm_code,
+
+        tbm.name
+            as tbm_name,
+
+        t.id
+            as tunnel_id,
+
+        t.project_id,
+
+        project.name
+            as project_name,
+
+        region.id
+            as region_id,
+
+        region.name
+            as region_name,
+
+        t.name
+            as tunnel_name,
+
+        t.full_name
+            as tunnel_full_name,
+
+        t.sort_order
+
+    from tbm.tbm_assignments ta
+
+    join tbm.tbms tbm
+        on tbm.code = ta.tbm_code
+
+    join proj.tunnels t
+        on t.id = ta.tunnel_id
+
+    left join proj.projects project
+        on project.id = t.project_id
+
+    left join master_data region
+        on region.id = project.region_id
+
+    order by
+        ta.tbm_code,
+        ta.start_date desc nulls last
+),
+
 plan_summary as (
 
+    /*
+     * 计划：
+     * 按 tunnel_id 汇总。
+     */
     select
         tp.tunnel_id,
 
@@ -157,62 +253,13 @@ plan_summary as (
 
     group by
         tp.tunnel_id
-),
-
-tbm_info as (
-
-    select distinct on (ta.tbm_code)
-
-        t.id
-            as tunnel_id,
-
-        ta.tbm_code,
-
-        tbm.name
-            as tbm_name,
-
-        t.project_id,
-
-        p.name
-            as project_name,
-
-        region.id
-            as region_id,
-
-        region.name
-            as region_name,
-
-        t.name
-            as tunnel_name,
-
-        t.full_name
-            as tunnel_full_name,
-
-        t.sort_order
-
-    from tbm.tbm_assignments ta
-
-    join tbm.tbms tbm
-        on tbm.code = ta.tbm_code
-
-    join proj.tunnels t
-        on t.id = ta.tunnel_id
-
-    left join proj.projects p
-        on p.id = t.project_id
-
-    left join public.master_data region
-        on region.id = p.region_id
-
-    order by
-        ta.tbm_code,
-        ta.start_date desc nulls last
 )
 
 select
+
     info.tunnel_id,
 
-    ps.tbm_code,
+    info.tbm_code,
     info.tbm_name,
 
     info.project_id,
@@ -246,7 +293,7 @@ select
 
 from progress_summary ps
 
-left join tbm_info info
+join tbm_info info
     on info.tbm_code = ps.tbm_code
 
 left join plan_summary plan
@@ -258,3 +305,7 @@ order by
     info.tbm_name;
 
 $$;
+
+grant execute
+on function runtime.fn_get_tbm_progress_period(date,date)
+to anon, authenticated;

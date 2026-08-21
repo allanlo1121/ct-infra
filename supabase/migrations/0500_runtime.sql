@@ -5,7 +5,7 @@
 create schema if not exists runtime;
 
 -- schema usage
-grant usage on schema runtime to authenticated, service_role;
+grant usage on schema runtime to anon, authenticated, service_role;
 
 -- existing tables
 grant select, insert, update, delete
@@ -59,18 +59,21 @@ create table runtime.tbm_phase_records (
 
   tbm_code text not null references tbm.tbms(code),
 
-  ring_no integer null,
-  start_chainage numeric null,
-  end_chainage numeric null,
+  ring_no integer,
+  chainage numeric,
 
   phase_type tbm.tbm_phase_type not null,
 
-  start_at timestamptz not null,
+  started_at timestamptz not null,
 
-  end_at timestamptz null,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz
+  created_at timestamptz not null default now()
 );
+
+create index idx_tbm_phase_records_tbm_started_at
+  on runtime.tbm_phase_records (
+    tbm_code,
+    started_at desc
+  );
 
 
 create table runtime.tbm_risk_states (
@@ -98,7 +101,7 @@ create table runtime.parameter_alarms (
 
     tbm_code text not null references tbm.tbms(code),
 
-    parameter_code text not null,
+    parameter_code text not null references tbm.parameters(code),
 
     ring_no bigint,
 
@@ -127,7 +130,7 @@ create table runtime.parameter_alarm_history (
 
     tbm_code text not null references tbm.tbms(code),
 
-    parameter_code text not null,
+    parameter_code text not null references tbm.parameters(code),
 
     alarm_value numeric,
 
@@ -326,6 +329,7 @@ create table runtime.tbm_connection_status_history (
     )
 );
 
+
 create table runtime.tbm_daily_progress (
   id uuid primary key default gen_random_uuid(),
 
@@ -342,9 +346,14 @@ create table runtime.tbm_daily_progress (
 
 
   -- 开启实时订阅
+  alter publication supabase_realtime add table proj.tunnels;
+  alter publication supabase_realtime add table proj.tunnel_risks;
+  alter publication supabase_realtime add table tbm.tbm_assignments;
   alter publication supabase_realtime add table runtime.tbm_runtime_state_current;
   alter publication supabase_realtime add table runtime.tbm_phase_records;
   alter publication supabase_realtime add table runtime.tbm_risk_states;
   alter publication supabase_realtime add table runtime.parameter_alarms;
+  alter publication supabase_realtime add table tbm.parameter_threshold_rules;
+   alter publication supabase_realtime add table tbm.tbm_parameter_threshold_rules;
   alter publication supabase_realtime add table runtime.tbm_connection_status;
   alter publication supabase_realtime add table runtime.tbm_daily_progress;
