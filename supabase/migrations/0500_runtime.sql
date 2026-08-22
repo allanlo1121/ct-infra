@@ -346,14 +346,11 @@ create table runtime.tbm_daily_progress (
 
 
   -- 开启实时订阅
-  alter publication supabase_realtime add table proj.tunnels;
-  alter publication supabase_realtime add table proj.tunnel_risks;
-  alter publication supabase_realtime add table tbm.tbm_assignments;
+ 
+
   alter publication supabase_realtime add table runtime.tbm_runtime_state_current;
   alter publication supabase_realtime add table runtime.tbm_phase_records;
   alter publication supabase_realtime add table runtime.tbm_risk_states;
   alter publication supabase_realtime add table runtime.parameter_alarms;
-  alter publication supabase_realtime add table tbm.parameter_threshold_rules;
-   alter publication supabase_realtime add table tbm.tbm_parameter_threshold_rules;
   alter publication supabase_realtime add table runtime.tbm_connection_status;
   alter publication supabase_realtime add table runtime.tbm_daily_progress;

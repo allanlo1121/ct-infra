@@ -420,3 +420,6 @@ to anon, authenticated, service_role;
 grant select
 on tbm.parameter_threshold_rules
 to anon, authenticated, service_role;
+
+alter publication supabase_realtime add table tbm.parameter_threshold_rules;
+alter publication supabase_realtime add table tbm.tbm_parameter_threshold_rules;
