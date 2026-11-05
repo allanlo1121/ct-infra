@@ -1,0 +1,12 @@
+-- supabase/roles.sql
+
+-- do $$
+-- begin
+--   if not exists (
+--     select 1 from pg_roles
+--     where rolname = 'tbm_writer'
+--   ) then
+--     create role tbm_writer nologin;
+--   end if;
+-- end;
+-- $$;
