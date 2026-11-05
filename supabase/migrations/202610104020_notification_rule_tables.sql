@@ -11,7 +11,7 @@ create table system.notification_subscriptions (
   -- 最低接收等级
   min_level text not null default 'info' check (min_level in ('info', 'warning', 'error', 'critical')),
   -- 接收组织范围
-  project_id uuid not null references projects (id),
+  project_id uuid not null references proj.projects (id),
   is_disabled boolean not null default false,
   unique (employee_id, source_type_code, event_type_code, project_id)
 );
