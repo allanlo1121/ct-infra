@@ -47,7 +47,7 @@ values
 参数：{{parameter_name}}
 当前值：{{alarm_value}} {{parameter_unit}}
 施工环号：{{ring_no}}
-发生时间：{{occurred_at}}}',
+发生时间：{{occurred_at}}',
 10
   );
 

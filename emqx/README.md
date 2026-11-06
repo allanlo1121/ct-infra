@@ -1,8 +1,13 @@
+# 1. 创建持久化目录
 mkdir -p data log
 
+# 2. 设置目录所有权
 sudo chown -R 1000:1000 data log
-sudo chmod -R 777 data log
 
+# 3. 设置目录权限
+sudo chmod -R u+rwX,g+rwX,o-rwx data log
+
+# 4. 启动 EMQX
 docker compose up -d
 
 Server:

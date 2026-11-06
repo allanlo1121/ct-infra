@@ -940,6 +940,40 @@ isOneToOne: false
       referencedColumns: ["code"]
     }
                   ]
+                },"parameter_control_items": {
+                  Row: {
+                    "description": string | null,"id": number,"max_value": number | null,"min_value": number | null,"name": string,"parameter_code": string | null,"scheme_id": string,"sort_order": number,"target_value": number | null,"unit": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "description"?: string | null,"id"?: never,"max_value"?: number | null,"min_value"?: number | null,"name": string,"parameter_code"?: string | null,"scheme_id": string,"sort_order"?: number,"target_value"?: number | null,"unit"?: string | null
+                  }
+                  Update: {
+                    "description"?: string | null,"id"?: never,"max_value"?: number | null,"min_value"?: number | null,"name"?: string,"parameter_code"?: string | null,"scheme_id"?: string,"sort_order"?: number,"target_value"?: number | null,"unit"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "parameter_control_items_scheme_id_fkey"
+      columns: ["scheme_id"]
+isOneToOne: false
+      referencedRelation: "parameter_control_schemes"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"parameter_control_schemes": {
+                  Row: {
+                    "created_at": string,"description": string | null,"effective_at": string | null,"end_ring": number | null,"id": string,"name": string,"start_ring": number | null,"status": string,"tunnel_id": string,"version": number
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"description"?: string | null,"effective_at"?: string | null,"end_ring"?: number | null,"id"?: string,"name": string,"start_ring"?: number | null,"status"?: string,"tunnel_id": string,"version"?: number
+                  }
+                  Update: {
+                    "created_at"?: string,"description"?: string | null,"effective_at"?: string | null,"end_ring"?: number | null,"id"?: string,"name"?: string,"start_ring"?: number | null,"status"?: string,"tunnel_id"?: string,"version"?: number
+                  }
+                  Relationships: [
+                    
+                  ]
                 },"parameters": {
                   Row: {
                     "code": string,"created_at": string,"created_by": string | null,"data_type": string,"description": string | null,"digits": number | null,"is_disabled": boolean,"name": string,"subsystem_code": string,"unit": string | null,"updated_at": string | null,"updated_by": string | null
@@ -1093,7 +1127,7 @@ isOneToOne: false
                   ]
                 },"v_parameter_threshold_list": {
                   Row: {
-                    "created_at": string,"created_by": string | null,"data_type": string,"end_ring": number,"id": number,"is_disabled": boolean,"min_record_delta": number,"min_record_interval_ms": number,"parameter_code": string,"parameter_name": string | null,"parameter_unit": string | null,"reference_value": number | null,"remark": string | null,"severity_code": string,"severity_name": string | null,"start_ring": number,"subsystem_code": string,"tbm_code": string,"tbm_parameter_id": number,"threshold_type": string,"threshold_value": number,"tunnel_id": string | null,"updated_at": string | null,"updated_by": string | null,"value_max": number | null,"value_min": number | null
+                    "created_at": string,"created_by": string | null,"data_type": string,"digits": number | null,"end_ring": number,"id": number,"is_disabled": boolean,"min_record_delta": number,"min_record_interval_ms": number,"parameter_code": string,"parameter_name": string | null,"parameter_unit": string | null,"reference_value": number | null,"remark": string | null,"severity_code": string,"severity_name": string | null,"start_ring": number,"subsystem_code": string,"tbm_code": string,"tbm_parameter_id": number,"threshold_type": string,"threshold_value": number,"tunnel_id": string | null,"updated_at": string | null,"updated_by": string | null,"value_max": number | null,"value_min": number | null
                   }
                   ComputedFields: never
                   Relationships: [
