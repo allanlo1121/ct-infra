@@ -193,6 +193,14 @@ using (
   (select iam.has_permission ('tbm', 'delete'))
 );
 
+--6. 订阅开启
+
+alter publication supabase_realtime
+add table tbm.parameter_thresholds;
+
+alter publication supabase_realtime
+add table tbm.parameter_threshold_defaults;
+
 
 /* sql-formatter-enable */
 create or replace view tbm.v_parameter_threshold_rules

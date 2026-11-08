@@ -275,3 +275,10 @@ begin
   where code = 'tbm';
 end;
 $$;
+
+--6. 订阅开启
+alter publication supabase_realtime
+add table tbm.parameter_thresholds;
+
+alter publication supabase_realtime
+add table tbm.parameter_threshold_defaults;

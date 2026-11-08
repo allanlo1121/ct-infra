@@ -1209,7 +1209,7 @@ isOneToOne: false
           Views: {
             "v_assignable_tunnels": {
                   Row: {
-                    "engineering_unit_id": string,"engineering_unit_name": string,"id": string,"name": string,"project_id": string,"project_name": string
+                    "engineering_unit_id": string,"engineering_unit_name": string | null,"id": string,"name": string,"project_id": string,"project_name": string
                   }
                   ComputedFields: never
                   Relationships: [
