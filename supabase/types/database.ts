@@ -852,6 +852,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "tbms"
       referencedColumns: ["code"]
+    },{
+      foreignKeyName: "assignments_tunnel_id_fkey"
+      columns: ["tunnel_id"]
+isOneToOne: false
+      referencedRelation: "v_assignable_tunnels"
+      referencedColumns: ["id"]
     }
                   ]
                 },"connection_status": {
@@ -938,6 +944,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "tbms"
       referencedColumns: ["code"]
+    },{
+      foreignKeyName: "parameter_alarms_tunnel_id_fkey"
+      columns: ["tunnel_id"]
+isOneToOne: false
+      referencedRelation: "v_assignable_tunnels"
+      referencedColumns: ["id"]
     }
                   ]
                 },"parameter_control_items": {
@@ -972,18 +984,70 @@ isOneToOne: false
                     "created_at"?: string,"description"?: string | null,"effective_at"?: string | null,"end_ring"?: number | null,"id"?: string,"name"?: string,"start_ring"?: number | null,"status"?: string,"tunnel_id"?: string,"version"?: number
                   }
                   Relationships: [
-                    
+                    {
+      foreignKeyName: "parameter_control_schemes_tunnel_id_fkey"
+      columns: ["tunnel_id"]
+isOneToOne: false
+      referencedRelation: "v_assignable_tunnels"
+      referencedColumns: ["id"]
+    }
                   ]
-                },"parameters": {
+                },"parameter_threshold_defaults": {
                   Row: {
-                    "code": string,"created_at": string,"created_by": string | null,"data_type": string,"description": string | null,"digits": number | null,"is_disabled": boolean,"name": string,"subsystem_code": string,"unit": string | null,"updated_at": string | null,"updated_by": string | null
+                    "created_at": string,"created_by": string | null,"id": number,"is_disabled": boolean,"min_record_delta": number,"min_record_interval_seconds": number,"parameter_code": string,"reference_value": number | null,"remark": string | null,"severity_code": string,"threshold_type": string,"threshold_value": number,"updated_at": string | null,"updated_by": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "code": string,"created_at"?: string,"created_by"?: string | null,"data_type": string,"description"?: string | null,"digits"?: number | null,"is_disabled"?: boolean,"name": string,"subsystem_code": string,"unit"?: string | null,"updated_at"?: string | null,"updated_by"?: string | null
+                    "created_at"?: string,"created_by"?: string | null,"id"?: never,"is_disabled"?: boolean,"min_record_delta"?: number,"min_record_interval_seconds"?: number,"parameter_code": string,"reference_value"?: number | null,"remark"?: string | null,"severity_code": string,"threshold_type": string,"threshold_value": number,"updated_at"?: string | null,"updated_by"?: string | null
                   }
                   Update: {
-                    "code"?: string,"created_at"?: string,"created_by"?: string | null,"data_type"?: string,"description"?: string | null,"digits"?: number | null,"is_disabled"?: boolean,"name"?: string,"subsystem_code"?: string,"unit"?: string | null,"updated_at"?: string | null,"updated_by"?: string | null
+                    "created_at"?: string,"created_by"?: string | null,"id"?: never,"is_disabled"?: boolean,"min_record_delta"?: number,"min_record_interval_seconds"?: number,"parameter_code"?: string,"reference_value"?: number | null,"remark"?: string | null,"severity_code"?: string,"threshold_type"?: string,"threshold_value"?: number,"updated_at"?: string | null,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "parameter_threshold_defaults_parameter_code_fkey"
+      columns: ["parameter_code"]
+isOneToOne: false
+      referencedRelation: "parameters"
+      referencedColumns: ["code"]
+    }
+                  ]
+                },"parameter_thresholds": {
+                  Row: {
+                    "created_at": string,"created_by": string | null,"end_ring": number,"id": number,"is_disabled": boolean,"min_record_delta": number,"min_record_interval_seconds": number,"reference_value": number | null,"remark": string | null,"severity_code": string,"start_ring": number,"tbm_parameter_id": number,"threshold_type": string,"threshold_value": number,"tunnel_id": string | null,"updated_at": string | null,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "created_at"?: string,"created_by"?: string | null,"end_ring": number,"id"?: never,"is_disabled"?: boolean,"min_record_delta"?: number,"min_record_interval_seconds"?: number,"reference_value"?: number | null,"remark"?: string | null,"severity_code": string,"start_ring": number,"tbm_parameter_id": number,"threshold_type": string,"threshold_value": number,"tunnel_id"?: string | null,"updated_at"?: string | null,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "created_at"?: string,"created_by"?: string | null,"end_ring"?: number,"id"?: never,"is_disabled"?: boolean,"min_record_delta"?: number,"min_record_interval_seconds"?: number,"reference_value"?: number | null,"remark"?: string | null,"severity_code"?: string,"start_ring"?: number,"tbm_parameter_id"?: number,"threshold_type"?: string,"threshold_value"?: number,"tunnel_id"?: string | null,"updated_at"?: string | null,"updated_by"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "parameter_thresholds_tbm_parameter_id_fkey"
+      columns: ["tbm_parameter_id"]
+isOneToOne: false
+      referencedRelation: "tbm_parameters"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "parameter_thresholds_tunnel_id_fkey"
+      columns: ["tunnel_id"]
+isOneToOne: false
+      referencedRelation: "v_assignable_tunnels"
+      referencedColumns: ["id"]
+    }
+                  ]
+                },"parameters": {
+                  Row: {
+                    "code": string,"created_at": string,"created_by": string | null,"data_type": string,"description": string | null,"digits": number | null,"is_disabled": boolean,"name": string,"sort_order": number,"subsystem_code": string,"unit": string | null,"updated_at": string | null,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "code": string,"created_at"?: string,"created_by"?: string | null,"data_type": string,"description"?: string | null,"digits"?: number | null,"is_disabled"?: boolean,"name": string,"sort_order"?: number,"subsystem_code": string,"unit"?: string | null,"updated_at"?: string | null,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "code"?: string,"created_at"?: string,"created_by"?: string | null,"data_type"?: string,"description"?: string | null,"digits"?: number | null,"is_disabled"?: boolean,"name"?: string,"sort_order"?: number,"subsystem_code"?: string,"unit"?: string | null,"updated_at"?: string | null,"updated_by"?: string | null
                   }
                   Relationships: [
                     {
@@ -1012,6 +1076,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "tbms"
       referencedColumns: ["code"]
+    },{
+      foreignKeyName: "ring_phase_records_tunnel_id_fkey"
+      columns: ["tunnel_id"]
+isOneToOne: false
+      referencedRelation: "v_assignable_tunnels"
+      referencedColumns: ["id"]
     }
                   ]
                 },"shield_crec1137": {
@@ -1034,16 +1104,36 @@ isOneToOne: false
       referencedColumns: ["code"]
     }
                   ]
-                },"subsystems": {
+                },"shield_lx21": {
                   Row: {
-                    "code": string,"created_at": string,"created_by": string | null,"description": string | null,"is_disabled": boolean,"name": string,"updated_at": string | null,"updated_by": string | null
+                    "b000000001": boolean | null,"b000000002": boolean | null,"created_at": string,"id": number,"s010101010": number | null,"s010101011": number | null,"s010102004": number | null,"s010103006": number | null,"s010109001": number | null,"s020901001": number | null,"s020901002": number | null,"s020901003": number | null,"s020901004": number | null,"s020901005": number | null,"s020901008": number | null,"s020901010": number | null,"s020901012": number | null,"s020901013": number | null,"s020902002": number | null,"s020906001": number | null,"s020906002": number | null,"s020906003": number | null,"s020906004": number | null,"s040211001": number | null,"s050001001": number | null,"s050001019": number | null,"s050001020": number | null,"s050001021": number | null,"s050001022": number | null,"s050006005": number | null,"s050006006": number | null,"s050006007": number | null,"s050006008": number | null,"s050009003": number | null,"s050100008": number | null,"s050109001": number | null,"s070102001": number | null,"s070109001": number | null,"s070201001": number | null,"s070201003": number | null,"s070204001": number | null,"s070301001": number | null,"s070401002": number | null,"s070606001": number | null,"s070606002": number | null,"s080201002": number | null,"s090109003": number | null,"s100100005": number | null,"s100100006": number | null,"s100100007": number | null,"s100100008": number | null,"s100111009": number | null,"s100111010": number | null,"s100206003": number | null,"s100206004": number | null,"s100206006": number | null,"s100206007": number | null,"s200013001": number | null,"s200201001": number | null,"s200301001": number | null,"s200401001": number | null,"s200701002": number | null,"s210013001": number | null,"s210013002": number | null,"s210013003": number | null,"s210013004": number | null,"s210013005": number | null,"s210013006": number | null,"s240113001": number | null,"s240113002": number | null,"s280013001": number | null,"s280013002": number | null,"s300101001": number | null,"s301301001": number | null,"s302004001": number | null,"sampled_at": string,"tbm_code": string,"updated_at": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "code": string,"created_at"?: string,"created_by"?: string | null,"description"?: string | null,"is_disabled"?: boolean,"name": string,"updated_at"?: string | null,"updated_by"?: string | null
+                    "b000000001"?: boolean | null,"b000000002"?: boolean | null,"created_at"?: string,"id"?: never,"s010101010"?: number | null,"s010101011"?: number | null,"s010102004"?: number | null,"s010103006"?: number | null,"s010109001"?: number | null,"s020901001"?: number | null,"s020901002"?: number | null,"s020901003"?: number | null,"s020901004"?: number | null,"s020901005"?: number | null,"s020901008"?: number | null,"s020901010"?: number | null,"s020901012"?: number | null,"s020901013"?: number | null,"s020902002"?: number | null,"s020906001"?: number | null,"s020906002"?: number | null,"s020906003"?: number | null,"s020906004"?: number | null,"s040211001"?: number | null,"s050001001"?: number | null,"s050001019"?: number | null,"s050001020"?: number | null,"s050001021"?: number | null,"s050001022"?: number | null,"s050006005"?: number | null,"s050006006"?: number | null,"s050006007"?: number | null,"s050006008"?: number | null,"s050009003"?: number | null,"s050100008"?: number | null,"s050109001"?: number | null,"s070102001"?: number | null,"s070109001"?: number | null,"s070201001"?: number | null,"s070201003"?: number | null,"s070204001"?: number | null,"s070301001"?: number | null,"s070401002"?: number | null,"s070606001"?: number | null,"s070606002"?: number | null,"s080201002"?: number | null,"s090109003"?: number | null,"s100100005"?: number | null,"s100100006"?: number | null,"s100100007"?: number | null,"s100100008"?: number | null,"s100111009"?: number | null,"s100111010"?: number | null,"s100206003"?: number | null,"s100206004"?: number | null,"s100206006"?: number | null,"s100206007"?: number | null,"s200013001"?: number | null,"s200201001"?: number | null,"s200301001"?: number | null,"s200401001"?: number | null,"s200701002"?: number | null,"s210013001"?: number | null,"s210013002"?: number | null,"s210013003"?: number | null,"s210013004"?: number | null,"s210013005"?: number | null,"s210013006"?: number | null,"s240113001"?: number | null,"s240113002"?: number | null,"s280013001"?: number | null,"s280013002"?: number | null,"s300101001"?: number | null,"s301301001"?: number | null,"s302004001"?: number | null,"sampled_at": string,"tbm_code": string,"updated_at"?: string | null
                   }
                   Update: {
-                    "code"?: string,"created_at"?: string,"created_by"?: string | null,"description"?: string | null,"is_disabled"?: boolean,"name"?: string,"updated_at"?: string | null,"updated_by"?: string | null
+                    "b000000001"?: boolean | null,"b000000002"?: boolean | null,"created_at"?: string,"id"?: never,"s010101010"?: number | null,"s010101011"?: number | null,"s010102004"?: number | null,"s010103006"?: number | null,"s010109001"?: number | null,"s020901001"?: number | null,"s020901002"?: number | null,"s020901003"?: number | null,"s020901004"?: number | null,"s020901005"?: number | null,"s020901008"?: number | null,"s020901010"?: number | null,"s020901012"?: number | null,"s020901013"?: number | null,"s020902002"?: number | null,"s020906001"?: number | null,"s020906002"?: number | null,"s020906003"?: number | null,"s020906004"?: number | null,"s040211001"?: number | null,"s050001001"?: number | null,"s050001019"?: number | null,"s050001020"?: number | null,"s050001021"?: number | null,"s050001022"?: number | null,"s050006005"?: number | null,"s050006006"?: number | null,"s050006007"?: number | null,"s050006008"?: number | null,"s050009003"?: number | null,"s050100008"?: number | null,"s050109001"?: number | null,"s070102001"?: number | null,"s070109001"?: number | null,"s070201001"?: number | null,"s070201003"?: number | null,"s070204001"?: number | null,"s070301001"?: number | null,"s070401002"?: number | null,"s070606001"?: number | null,"s070606002"?: number | null,"s080201002"?: number | null,"s090109003"?: number | null,"s100100005"?: number | null,"s100100006"?: number | null,"s100100007"?: number | null,"s100100008"?: number | null,"s100111009"?: number | null,"s100111010"?: number | null,"s100206003"?: number | null,"s100206004"?: number | null,"s100206006"?: number | null,"s100206007"?: number | null,"s200013001"?: number | null,"s200201001"?: number | null,"s200301001"?: number | null,"s200401001"?: number | null,"s200701002"?: number | null,"s210013001"?: number | null,"s210013002"?: number | null,"s210013003"?: number | null,"s210013004"?: number | null,"s210013005"?: number | null,"s210013006"?: number | null,"s240113001"?: number | null,"s240113002"?: number | null,"s280013001"?: number | null,"s280013002"?: number | null,"s300101001"?: number | null,"s301301001"?: number | null,"s302004001"?: number | null,"sampled_at"?: string,"tbm_code"?: string,"updated_at"?: string | null
+                  }
+                  Relationships: [
+                    {
+      foreignKeyName: "shield_lx21_tbm_code_fkey"
+      columns: ["tbm_code"]
+isOneToOne: false
+      referencedRelation: "tbms"
+      referencedColumns: ["code"]
+    }
+                  ]
+                },"subsystems": {
+                  Row: {
+                    "code": string,"created_at": string,"created_by": string | null,"description": string | null,"is_disabled": boolean,"name": string,"sort_order": number,"updated_at": string | null,"updated_by": string | null
+                  }
+                  ComputedFields: never
+                  Insert: {
+                    "code": string,"created_at"?: string,"created_by"?: string | null,"description"?: string | null,"is_disabled"?: boolean,"name": string,"sort_order"?: number,"updated_at"?: string | null,"updated_by"?: string | null
+                  }
+                  Update: {
+                    "code"?: string,"created_at"?: string,"created_by"?: string | null,"description"?: string | null,"is_disabled"?: boolean,"name"?: string,"sort_order"?: number,"updated_at"?: string | null,"updated_by"?: string | null
                   }
                   Relationships: [
                     
@@ -1065,6 +1155,12 @@ isOneToOne: false
       columns: ["tbm_parameter_id"]
 isOneToOne: false
       referencedRelation: "tbm_parameters"
+      referencedColumns: ["id"]
+    },{
+      foreignKeyName: "tbm_parameter_threshold_rules_tunnel_id_fkey"
+      columns: ["tunnel_id"]
+isOneToOne: false
+      referencedRelation: "v_assignable_tunnels"
       referencedColumns: ["id"]
     }
                   ]
@@ -1111,7 +1207,15 @@ isOneToOne: false
                 }
           }
           Views: {
-            "v_current_assignments": {
+            "v_assignable_tunnels": {
+                  Row: {
+                    "engineering_unit_id": string,"engineering_unit_name": string,"id": string,"name": string,"project_id": string,"project_name": string
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    
+                  ]
+                },"v_current_assignments": {
                   Row: {
                     "advance_direction": string,"end_chainage": number,"end_ring": number,"engineering_unit_id": string,"engineering_unit_name": string,"id": string,"organization_id": string | null,"organization_name": string | null,"project_id": string,"project_name": string,"start_chainage": number,"start_ring": number,"tbm_code": string,"tbm_name": string,"tunnel_id": string,"tunnel_name": string
                   }
@@ -1123,6 +1227,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "tbms"
       referencedColumns: ["code"]
+    },{
+      foreignKeyName: "assignments_tunnel_id_fkey"
+      columns: ["tunnel_id"]
+isOneToOne: false
+      referencedRelation: "v_assignable_tunnels"
+      referencedColumns: ["id"]
     }
                   ]
                 },"v_parameter_threshold_list": {
@@ -1144,6 +1254,12 @@ isOneToOne: false
       referencedRelation: "tbm_parameters"
       referencedColumns: ["id"]
     },{
+      foreignKeyName: "tbm_parameter_threshold_rules_tunnel_id_fkey"
+      columns: ["tunnel_id"]
+isOneToOne: false
+      referencedRelation: "v_assignable_tunnels"
+      referencedColumns: ["id"]
+    },{
       foreignKeyName: "tbm_parameters_parameter_code_fkey"
       columns: ["parameter_code"]
 isOneToOne: false
@@ -1157,6 +1273,14 @@ isOneToOne: false
       referencedColumns: ["code"]
     }
                   ]
+                },"v_parameter_threshold_rules": {
+                  Row: {
+                    "data_type": string | null,"digits": number | null,"end_ring": number | null,"min_record_delta": number | null,"min_record_interval_seconds": number | null,"parameter_code": string | null,"parameter_name": string | null,"parameter_unit": string | null,"reference_value": number | null,"severity_code": string | null,"severity_name": string | null,"start_ring": number | null,"subsystem_code": string | null,"tbm_code": string | null,"threshold_type": string | null,"threshold_value": number | null,"value_max": number | null,"value_min": number | null
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    
+                  ]
                 },"v_tbm_assignments_list": {
                   Row: {
                     "advance_direction": string,"created_at": string,"created_by": string | null,"end_chainage": number | null,"end_date": string | null,"end_ring": number | null,"id": string,"project_name": string | null,"remark": string | null,"section_name": string | null,"start_chainage": number | null,"start_date": string,"start_ring": number | null,"tbm_code": string,"tbm_name": string | null,"tunnel_id": string,"tunnel_name": string | null,"updated_at": string | null,"updated_by": string | null
@@ -1169,6 +1293,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "tbms"
       referencedColumns: ["code"]
+    },{
+      foreignKeyName: "assignments_tunnel_id_fkey"
+      columns: ["tunnel_id"]
+isOneToOne: false
+      referencedRelation: "v_assignable_tunnels"
+      referencedColumns: ["id"]
     }
                   ]
                 }

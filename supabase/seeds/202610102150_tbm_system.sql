@@ -1491,3 +1491,21 @@ VALUES
     ('t020100005', '盾尾间隙检测5', 't02', 'double', 'mm', 2),
     ('t020100006', '盾尾间隙检测6', 't02', 'double', 'mm', 2),
     ('t020100007', '盾尾间隙检测7', 't02', 'double', 'mm', 2) ON CONFLICT (code) DO NOTHING;
+
+
+INSERT INTO
+    tbm.parameter_threshold_defaults (parameter_code, threshold_type, severity_code, reference_value, threshold_value,min_record_delta,min_record_interval_seconds)
+VALUES
+    ('s100206003', 'deviation', '52010001', '0','50','10','600'),
+    ('s100206004', 'deviation', '52010001', '0','50','10','600'),
+    ('s100206006', 'deviation', '52010001', '0','50','10','600'),
+    ('s100206007', 'deviation', '52010001', '0','50','10','600'),
+    ('s100206009', 'deviation', '52010001', '0','50','10','600'),
+    ('s100206010', 'deviation', '52010001', '0','50','10','600'), 
+    ('s100206003', 'deviation', '52010002', '0','80','10','600'),
+    ('s100206004', 'deviation', '52010002', '0','80','10','600'),
+    ('s100206006', 'deviation', '52010002', '0','80','10','600'),
+    ('s100206007', 'deviation', '52010002', '0','80','10','600'),
+    ('s100206009', 'deviation', '52010002', '0','80','10','600'),
+    ('s100206010', 'deviation', '52010002', '0','80','10','600')    
+ON CONFLICT (parameter_code,severity_code) DO NOTHING;

@@ -134,3 +134,45 @@ cross join (
   description,
   sort_order
 );
+
+
+select
+  c.relname,
+  c.relrowsecurity,
+  c.relreplident,
+  p.pubname
+from pg_class c
+join pg_namespace n
+  on n.oid = c.relnamespace
+left join pg_publication_tables p
+  on p.schemaname = n.nspname
+  and p.tablename = c.relname
+  and p.pubname = 'supabase_realtime'
+where n.nspname = 'tbm'
+  and c.relname in (
+    'assignments',
+    'tbm_parameter_threshold_rules'
+  );
+
+
+  select
+  pubname,
+  pubinsert,
+  pubupdate,
+  pubdelete
+from pg_publication
+where pubname = 'supabase_realtime';
+
+select
+  schemaname,
+  tablename
+from pg_publication_tables
+where pubname = 'supabase_realtime'
+  and schemaname = 'tbm'
+  and tablename in (
+    'assignments',
+    'tbm_parameter_threshold_rules'
+  );
+
+  alter publication supabase_realtime
+add table tbm.tbm_parameter_threshold_rules;
