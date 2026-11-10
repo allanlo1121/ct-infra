@@ -177,16 +177,18 @@ comment on function tbm.get_ring_progress(
 
 
 
-select *
-from tbm.get_ring_progress(
-  array['crec1137'],
-  '2026-11-08 19:00:00+08',
-  '2026-11-09 19:00:00+08'
+
+-- =========================================
+-- TBM 环阶段时长明细统计
+-- =========================================
+
+drop function if exists tbm.get_ring_phase_details(
+  text[],
+  timestamptz,
+  timestamptz
 );
 
-
-
-create or replace function tbm.get_ring_phase_details(
+create function tbm.get_ring_phase_details(
   p_tbm_codes text[],
   p_start_time timestamptz,
   p_end_time timestamptz
@@ -195,6 +197,7 @@ returns table (
   tbm_code text,
   tbm_name text,
   project_name text,
+  engineering_unit_name text,
   tunnel_name text,
   ring_no integer,
 
@@ -214,19 +217,24 @@ security invoker
 set search_path = ''
 as $$
 begin
-  -- 参数验证
+  -- =====================================
+  -- 1. 参数验证
+  -- =====================================
+
   if p_tbm_codes is null
-    or cardinality(p_tbm_codes) = 0
-  then
+     or cardinality(p_tbm_codes) = 0 then
     raise exception 'p_tbm_codes cannot be empty';
   end if;
 
   if p_start_time is null
-    or p_end_time is null
-    or p_start_time >= p_end_time
-  then
+     or p_end_time is null
+     or p_start_time >= p_end_time then
     raise exception 'Invalid time range';
   end if;
+
+  -- =====================================
+  -- 2. 查询环阶段数据
+  -- =====================================
 
   return query
   with phase_data as (
@@ -236,7 +244,7 @@ begin
       r.ring_no,
       r.tbm_phase_type,
 
-      -- 仅计算与查询时间段重叠的部分
+      -- 仅计算与查询时间范围重叠的时长（秒）
       greatest(
         0,
         extract(
@@ -257,6 +265,10 @@ begin
       and r.started_at < p_end_time
       and coalesce(r.ended_at, now()) > p_start_time
   ),
+
+  -- =====================================
+  -- 3. 按 TBM + 隧道 + 环号汇总
+  -- =====================================
 
   phase_summary as (
     select
@@ -314,10 +326,15 @@ begin
       d.ring_no
   )
 
+  -- =====================================
+  -- 4. 关联设备及工程信息
+  -- =====================================
+
   select
     s.tbm_code,
     m.name::text as tbm_name,
     p.name::text as project_name,
+    eu.name::text as engineering_unit_name,
     t.full_name::text as tunnel_name,
     s.ring_no,
 
@@ -340,14 +357,14 @@ begin
     on t.id = s.tunnel_id
 
   join proj.engineering_units eu
-    on eu.id =t.engineering_unit_id
+    on eu.id = t.engineering_unit_id
 
   join proj.projects p
     on p.id = eu.project_id
 
-
   order by
     p.name,
+    eu.name,
     t.name,
     s.tbm_code,
     s.ring_no;
@@ -355,132 +372,39 @@ begin
 end;
 $$;
 
+-- =========================================
+-- 5. 函数说明
+-- =========================================
 
-create or replace function tbm.get_parameter_alarms(
-  p_tbm_codes text[],
-  p_start_time timestamptz,
-  p_end_time timestamptz
-)
-returns table (
-  id bigint,
-
-  tbm_code text,
-  tbm_name text,
-  project_name text,
-  tunnel_name text,
-
-  parameter_code text,
-  parameter_name text,
-  parameter_unit text,
-
-  severity_code text,
-  severity_name text,
-
-  alarm_value numeric,
-  threshold_type text,
-  reference_value numeric,
-  threshold_value numeric,
-
-  min_record_delta numeric,
-  min_record_interval_ms integer,
-  digits integer,
-
-  ring_no integer,
-  chainage numeric,
-  occurred_at timestamptz
-)
-language plpgsql
-stable
-security invoker
-set search_path = ''
-as $$
-begin
-
-  -- 参数检查
-  if p_tbm_codes is null
-    or cardinality(p_tbm_codes) = 0
-  then
-    raise exception 'p_tbm_codes cannot be empty';
-  end if;
-
-  if p_start_time is null
-    or p_end_time is null
-    or p_start_time >= p_end_time
-  then
-    raise exception 'Invalid time range';
-  end if;
-
-  return query
-  select
-    a.id,
-
-    a.tbm_code,
-    m.name::text as tbm_name,
-    p.name::text as project_name,
-    t.full_name::text as tunnel_name,
-
-    a.parameter_code,
-
-    a.rule_snapshot ->> 'parameter_name'
-      as parameter_name,
-
-    a.rule_snapshot ->> 'parameter_unit'
-      as parameter_unit,
-
-    a.severity_code,
-
-    a.rule_snapshot ->> 'severity_name'
-      as severity_name,
-
-    a.alarm_value,
-
-    a.rule_snapshot ->> 'threshold_type'
-      as threshold_type,
-
-    (a.rule_snapshot ->> 'reference_value')::numeric
-      as reference_value,
-
-    (a.rule_snapshot ->> 'threshold_value')::numeric
-      as threshold_value,
-
-    (a.rule_snapshot ->> 'min_record_delta')::numeric
-      as min_record_delta,
-
-    (a.rule_snapshot ->> 'min_record_interval_ms')::integer
-      as min_record_interval_ms,
-
-    (a.rule_snapshot ->> 'digits')::integer
-      as digits,
-
-    a.ring_no,
-    a.chainage,
-    a.occurred_at
-
-  from tbm.parameter_alarms a
-
-  join tbm.tbms m
-    on m.code = a.tbm_code
-
-  join proj.tunnels t
-    on t.id = a.tunnel_id
-
-  join proj.engineering_units eu
-    on eu.id =t.engineering_unit_id
-
-  join proj.projects p
-    on p.id = eu.project_id
+comment on function tbm.get_ring_phase_details(
+  text[],
+  timestamptz,
+  timestamptz
+) is
+'统计指定TBM设备在时间范围内各环的运行阶段时长。
+根据环阶段记录与查询时间范围的交集计算有效时长，按TBM、隧道及环号分组。
+分别统计掘进、管片拼装、等待、停机、故障、换刀、维修及未知状态的持续时间。
+返回设备、项目、工程单元、隧道名称、环号及各阶段时长。
+所有时长单位为秒，结果四舍五入到整数秒。
+仅统计查询时间范围内的重叠时长，不包含范围外的阶段时长。';
 
 
-  where
-    a.tbm_code = any(p_tbm_codes)
-    and a.occurred_at >= p_start_time
-    and a.occurred_at < p_end_time
 
-  order by
-    a.occurred_at desc,
-    a.id desc
-
-  limit 500;
-
-end;
-$$;
+create or replace view tbm.v_parameter_alarm_details
+with (security_invoker = true)
+as
+select
+  a.*,
+  m.name as tbm_name,
+  p.name as project_name,
+  eu.name as engineering_unit_name,
+  t.full_name as tunnel_name
+from tbm.parameter_alarms a
+join tbm.tbms m
+  on m.code = a.tbm_code
+join proj.tunnels t
+  on t.id = a.tunnel_id
+join proj.engineering_units eu
+  on eu.id = t.engineering_unit_id
+join proj.projects p
+  on p.id = eu.project_id;

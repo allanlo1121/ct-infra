@@ -918,6 +918,12 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "parameter_alarms"
       referencedColumns: ["id"]
+    },{
+      foreignKeyName: "parameter_alarm_verifications_alarm_id_fkey"
+      columns: ["alarm_id"]
+isOneToOne: false
+      referencedRelation: "v_parameter_alarm_details"
+      referencedColumns: ["id"]
     }
                   ]
                 },"parameter_alarms": {
@@ -1215,6 +1221,26 @@ isOneToOne: false
                   Relationships: [
                     
                   ]
+                },"v_assignment_details": {
+                  Row: {
+                    "advance_direction": string,"end_chainage": number,"end_date": string | null,"end_ring": number,"engineering_unit_id": string,"engineering_unit_name": string | null,"id": string,"organization_id": string | null,"organization_name": string | null,"project_id": string,"project_name": string,"start_chainage": number,"start_date": string,"start_ring": number,"tbm_code": string,"tbm_name": string,"tunnel_id": string,"tunnel_name": string | null
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    {
+      foreignKeyName: "assignments_tbm_code_fkey"
+      columns: ["tbm_code"]
+isOneToOne: false
+      referencedRelation: "tbms"
+      referencedColumns: ["code"]
+    },{
+      foreignKeyName: "assignments_tunnel_id_fkey"
+      columns: ["tunnel_id"]
+isOneToOne: false
+      referencedRelation: "v_assignable_tunnels"
+      referencedColumns: ["id"]
+    }
+                  ]
                 },"v_current_assignments": {
                   Row: {
                     "advance_direction": string,"end_chainage": number,"end_ring": number,"engineering_unit_id": string,"engineering_unit_name": string,"id": string,"organization_id": string | null,"organization_name": string | null,"project_id": string,"project_name": string,"start_chainage": number,"start_ring": number,"tbm_code": string,"tbm_name": string,"tunnel_id": string,"tunnel_name": string
@@ -1233,6 +1259,26 @@ isOneToOne: false
 isOneToOne: false
       referencedRelation: "v_assignable_tunnels"
       referencedColumns: ["id"]
+    }
+                  ]
+                },"v_parameter_alarm_details": {
+                  Row: {
+                    "alarm_value": number,"chainage": number | null,"engineering_unit_name": string,"id": number,"occurred_at": string,"parameter_code": string,"parameter_name": string,"project_name": string,"ring_no": number | null,"rule_snapshot": NonNullable<Json>,"severity_code": string,"severity_name": string,"tbm_code": string,"tbm_name": string,"tunnel_name": string | null
+                  }
+                  ComputedFields: never
+                  Relationships: [
+                    {
+      foreignKeyName: "parameter_alarms_parameter_code_fkey"
+      columns: ["parameter_code"]
+isOneToOne: false
+      referencedRelation: "parameters"
+      referencedColumns: ["code"]
+    },{
+      foreignKeyName: "parameter_alarms_tbm_code_fkey"
+      columns: ["tbm_code"]
+isOneToOne: false
+      referencedRelation: "tbms"
+      referencedColumns: ["code"]
     }
                   ]
                 },"v_parameter_threshold_list": {
@@ -1322,12 +1368,12 @@ isOneToOne: false
                            },
 "get_ring_phase_details":
 { Args: { "p_end_time": string,"p_start_time": string,"p_tbm_codes": (string)[] }; Returns: {
-              "cutter_change_seconds": number,"excavation_seconds": number,"fault_seconds": number,"maintenance_seconds": number,"project_name": string,"ring_no": number,"segment_erection_seconds": number,"stopped_seconds": number,"tbm_code": string,"tbm_name": string,"total_seconds": number,"tunnel_name": string,"unknown_seconds": number,"waiting_seconds": number
+              "cutter_change_seconds": number,"engineering_unit_name": string,"excavation_seconds": number,"fault_seconds": number,"maintenance_seconds": number,"project_name": string,"ring_no": number,"segment_erection_seconds": number,"stopped_seconds": number,"tbm_code": string,"tbm_name": string,"total_seconds": number,"tunnel_name": string,"unknown_seconds": number,"waiting_seconds": number
             }[]
                            },
 "get_ring_progress":
 { Args: { "p_end_time": string,"p_start_time": string,"p_tbm_codes": (string)[] }; Returns: {
-              "first_ring": number,"last_ring": number,"observed_ring_count": number,"project_name": string,"ring_numbers": (number)[],"ring_span": number,"tbm_code": string,"tbm_name": string,"tunnel_name": string
+              "completed_rings": number,"engineering_unit_name": string,"project_name": string,"ring_numbers": (number)[],"tbm_code": string,"tbm_name": string,"tunnel_name": string
             }[]
                            },
 "sync_realdata_table":
