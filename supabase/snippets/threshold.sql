@@ -484,3 +484,237 @@ end if;
 
 end;
 $$;
+
+
+
+
+alter table tbm.parameter_alarms
+  add column is_notified boolean not null default false,
+  add column is_false_alarm boolean;
+
+alter table tbm.parameter_alarms
+  add column updated_at timestamptz not null default now(),
+  add column updated_by uuid;
+
+
+-- 2. AUDIT FIELDS
+alter table tbm.parameter_alarms
+add column created_at timestamptz not null default now();
+
+alter table tbm.parameter_alarms
+add column updated_at timestamptz;
+
+alter table tbm.parameter_alarms
+add column created_by uuid
+references auth.users(id) on delete set null;
+
+alter table tbm.parameter_alarms
+add column updated_by uuid
+references auth.users(id) on delete set null;
+
+create trigger trg_tbm_alarms_audit_insert
+before insert on tbm.parameter_alarms
+for each row
+execute function system.audit_insert();
+
+create trigger trg_tbm_alarms_audit_update
+before update on tbm.parameter_alarms
+for each row
+execute function system.audit_update();
+
+create trigger trg_tbm_alarms_audit_delete
+before delete on tbm.parameter_alarms
+for each row
+execute function system.audit_delete();
+
+-- ==========================================
+-- 删除旧函数
+-- ==========================================
+
+drop function if exists tbm.apply_parameter_alarm(
+  text,
+  uuid,
+  text,
+  text,
+  jsonb,
+  numeric,
+  integer,
+  numeric,
+  timestamptz
+);
+
+-- ==========================================
+-- 插入参数报警记录
+--
+-- 1. 获取上一次报警值及时间
+-- 2. 获取上一次通知值及时间
+-- 3. 插入本次报警
+-- 4. 返回报警ID及历史参考信息
+--
+-- 正常数据不插入
+-- 不进行波动和时间间隔过滤
+-- ==========================================
+
+create function tbm.apply_parameter_alarm(
+  p_tbm_code text,
+  p_tunnel_id uuid,
+  p_parameter_code text,
+  p_severity_code text,
+  p_rule_snapshot jsonb,
+  p_alarm_value numeric,
+  p_ring_no integer,
+  p_chainage numeric,
+  p_occurred_at timestamptz
+)
+returns table (
+  alarm_id bigint,
+  previous_value numeric,
+  previous_at timestamptz,
+  last_notified_value numeric,
+  last_notified_at timestamptz
+)
+language plpgsql
+volatile
+security invoker
+set search_path = ''
+as $$
+declare
+  v_alarm_id bigint;
+
+  v_previous_value numeric;
+  v_previous_at timestamptz;
+
+  v_last_notified_value numeric;
+  v_last_notified_at timestamptz;
+begin
+
+  -- =====================================
+  -- 1. 未命中报警，直接返回
+  -- =====================================
+
+  if p_severity_code is null then
+    return;
+  end if;
+
+  -- =====================================
+  -- 2. 参数校验
+  -- =====================================
+
+  if p_tbm_code is null
+     or p_tbm_code = ''
+     or p_tunnel_id is null
+     or p_parameter_code is null
+     or p_parameter_code = ''
+     or p_alarm_value is null
+     or p_occurred_at is null
+     or p_rule_snapshot is null
+     or pg_catalog.jsonb_typeof(p_rule_snapshot) <> 'object'
+  then
+    raise exception 'Invalid parameter alarm arguments'
+      using errcode = '22023';
+  end if;
+
+  if p_severity_code !~ '^[0-9]{8}$' then
+    raise exception 'Invalid severity code: %', p_severity_code
+      using errcode = '22023';
+  end if;
+
+  -- =====================================
+  -- 3. 同一 TBM 参数串行处理
+  -- =====================================
+
+  perform pg_catalog.pg_advisory_xact_lock(
+    pg_catalog.hashtextextended(
+      p_tbm_code || ':' || p_parameter_code,
+      0
+    )
+  );
+
+  -- =====================================
+  -- 4. 查询上一条报警记录
+  -- =====================================
+
+  select
+    a.alarm_value,
+    a.occurred_at
+  into
+    v_previous_value,
+    v_previous_at
+  from tbm.parameter_alarms a
+  where a.tbm_code = p_tbm_code
+    and a.tunnel_id = p_tunnel_id
+    and a.parameter_code = p_parameter_code
+    and a.occurred_at <= p_occurred_at
+  order by
+    a.occurred_at desc,
+    a.id desc
+  limit 1;
+
+  -- =====================================
+  -- 5. 查询上一次已创建通知的报警
+  -- =====================================
+
+  select
+    a.alarm_value,
+    a.occurred_at
+  into
+    v_last_notified_value,
+    v_last_notified_at
+  from tbm.parameter_alarms a
+  where a.tbm_code = p_tbm_code
+    and a.tunnel_id = p_tunnel_id
+    and a.parameter_code = p_parameter_code
+    and a.is_notified = true
+    and a.is_false_alarm is distinct from true
+    and a.occurred_at <= p_occurred_at
+  order by
+    a.occurred_at desc,
+    a.id desc
+  limit 1;
+
+  -- =====================================
+  -- 6. 插入本次报警记录
+  -- =====================================
+
+  insert into tbm.parameter_alarms (
+    tbm_code,
+    tunnel_id,
+    parameter_code,
+    severity_code,
+    rule_snapshot,
+    alarm_value,
+    ring_no,
+    chainage,
+    occurred_at,
+    is_notified,
+    is_false_alarm
+  )
+  values (
+    p_tbm_code,
+    p_tunnel_id,
+    p_parameter_code,
+    p_severity_code,
+    p_rule_snapshot,
+    p_alarm_value,
+    p_ring_no,
+    p_chainage,
+    p_occurred_at,
+    false,
+    null
+  )
+  returning id into v_alarm_id;
+
+  -- =====================================
+  -- 7. 返回结果
+  -- =====================================
+
+  return query
+  select
+    v_alarm_id,
+    v_previous_value,
+    v_previous_at,
+    v_last_notified_value,
+    v_last_notified_at;
+
+end;
+$$;

@@ -928,14 +928,14 @@ isOneToOne: false
                   ]
                 },"parameter_alarms": {
                   Row: {
-                    "alarm_value": number,"chainage": number | null,"created_at": string,"created_by": string | null,"id": number,"occurred_at": string,"parameter_code": string,"ring_no": number | null,"rule_snapshot": NonNullable<Json>,"severity_code": string,"tbm_code": string,"tunnel_id": string
+                    "alarm_value": number,"chainage": number | null,"created_at": string,"created_by": string | null,"id": number,"is_false_alarm": boolean | null,"is_notified": boolean,"occurred_at": string,"parameter_code": string,"ring_no": number | null,"rule_snapshot": NonNullable<Json>,"severity_code": string,"tbm_code": string,"tunnel_id": string,"updated_at": string,"updated_by": string | null
                   }
                   ComputedFields: never
                   Insert: {
-                    "alarm_value": number,"chainage"?: number | null,"created_at"?: string,"created_by"?: string | null,"id"?: never,"occurred_at": string,"parameter_code": string,"ring_no"?: number | null,"rule_snapshot": NonNullable<Json>,"severity_code": string,"tbm_code": string,"tunnel_id": string
+                    "alarm_value": number,"chainage"?: number | null,"created_at"?: string,"created_by"?: string | null,"id"?: never,"is_false_alarm"?: boolean | null,"is_notified"?: boolean,"occurred_at": string,"parameter_code": string,"ring_no"?: number | null,"rule_snapshot": NonNullable<Json>,"severity_code": string,"tbm_code": string,"tunnel_id": string,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Update: {
-                    "alarm_value"?: number,"chainage"?: number | null,"created_at"?: string,"created_by"?: string | null,"id"?: never,"occurred_at"?: string,"parameter_code"?: string,"ring_no"?: number | null,"rule_snapshot"?: NonNullable<Json>,"severity_code"?: string,"tbm_code"?: string,"tunnel_id"?: string
+                    "alarm_value"?: number,"chainage"?: number | null,"created_at"?: string,"created_by"?: string | null,"id"?: never,"is_false_alarm"?: boolean | null,"is_notified"?: boolean,"occurred_at"?: string,"parameter_code"?: string,"ring_no"?: number | null,"rule_snapshot"?: NonNullable<Json>,"severity_code"?: string,"tbm_code"?: string,"tunnel_id"?: string,"updated_at"?: string,"updated_by"?: string | null
                   }
                   Relationships: [
                     {
@@ -1351,7 +1351,9 @@ isOneToOne: false
           }
           Functions: {
             "apply_parameter_alarm":
-{ Args: { "p_alarm_value": number,"p_chainage": number,"p_occurred_at": string,"p_parameter_code": string,"p_ring_no": number,"p_rule_snapshot": Json,"p_severity_code": string,"p_tbm_code": string,"p_tunnel_id": string }; Returns: number
+{ Args: { "p_alarm_value": number,"p_chainage": number,"p_occurred_at": string,"p_parameter_code": string,"p_ring_no": number,"p_rule_snapshot": Json,"p_severity_code": string,"p_tbm_code": string,"p_tunnel_id": string }; Returns: {
+              "alarm_id": number,"last_notified_at": string,"last_notified_value": number,"previous_at": string,"previous_value": number
+            }[]
                            },
 "apply_ring_phase":
 { Args: { "p_chainage": number,"p_phase_type": string,"p_ring_no": number,"p_started_at": string,"p_tbm_code": string,"p_tunnel_id": string }; Returns: Json
